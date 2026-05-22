@@ -1,0 +1,89 @@
+@page "/orders"
+@rendermode InteractiveServer
+@inject IStoreApiClient Api
+@inject IUserSessionService UserSession
+
+<PageTitle>My Orders</PageTitle>
+
+<h1>Order History</h1>
+
+@if (_placedOrderId is not null)
+{
+    <div class="alert alert-success">Order @_placedOrderId placed successfully.</div>
+}
+
+@if (UserSession.CurrentUserId is null)
+{
+    <p class="text-muted">Place an order at checkout to see your history here.</p>
+}
+else if (_loading)
+{
+    <p>Loading...</p>
+}
+else if (_orders.Count == 0)
+{
+    <p class="text-muted">No orders yet.</p>
+}
+else
+{
+    @foreach (var order in _orders)
+    {
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between">
+                <span>Order @order.Id.ToString()[..8]…</span>
+                <span>@order.CreatedAt.ToLocalTime().ToString("g")</span>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm mb-2">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Line total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in order.Items)
+                        {
+                            <tr>
+                                <td>@item.ProductName</td>
+                                <td>@item.Quantity</td>
+                                <td>@item.UnitPrice.ToString("C")</td>
+                                <td>@item.LineTotal.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <p class="fw-bold mb-0">Total: @order.TotalAmount.ToString("C")</p>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private IReadOnlyList<OrderDto> _orders = Array.Empty<OrderDto>();
+    private bool _loading = true;
+    private Guid? _placedOrderId;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        if (query.TryGetValue("placed", out var placedValue) && Guid.TryParse(placedValue, out var placedId))
+        {
+            _placedOrderId = placedId;
+        }
+
+        if (UserSession.CurrentUserId is Guid userId)
+        {
+            _orders = await Api.GetOrdersByUserAsync(userId);
+        }
+
+        _loading = false;
+    }
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+}

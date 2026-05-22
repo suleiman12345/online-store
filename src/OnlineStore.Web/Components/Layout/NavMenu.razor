@@ -1,0 +1,19 @@
+<div class="top-row ps-3 navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Online Store</a>
+    </div>
+</div>
+
+<nav class="flex-column nav-scrollable px-3 py-2">
+    <NavLink class="nav-link" href="/products" Match="NavLinkMatch.Prefix">Catalog</NavLink>
+    <NavLink class="nav-link" href="/categories">Categories</NavLink>
+    <NavLink class="nav-link" href="/cart">Cart (@ItemCount)</NavLink>
+    <NavLink class="nav-link" href="/checkout">Checkout</NavLink>
+    <NavLink class="nav-link" href="/orders">My Orders</NavLink>
+</nav>
+
+@code {
+    /// <summary>Number of items in the shopping cart.</summary>
+    [Parameter]
+    public int ItemCount { get; set; }
+}

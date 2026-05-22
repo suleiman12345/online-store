@@ -1,0 +1,102 @@
+@page "/checkout"
+@rendermode InteractiveServer
+@inject IStoreApiClient Api
+@inject ICartService CartService
+@inject IUserSessionService UserSession
+@inject NavigationManager Navigation
+
+<PageTitle>Checkout</PageTitle>
+
+<h1>Checkout</h1>
+
+@if (_cartItems.Count == 0)
+{
+    <p class="text-warning">Your cart is empty.</p>
+    <a href="/products" class="btn btn-primary">Go to catalog</a>
+}
+else
+{
+    <p>Order total: <strong>@_cartTotal.ToString("C")</strong> (@_cartItems.Count item types)</p>
+
+    <EditForm Model="_checkout" OnValidSubmit="ShowConfirm">
+        <FluentValidationValidator />
+        <ValidationSummary />
+        <div class="mb-3">
+            <label class="form-label" for="email">Email</label>
+            <InputText id="email" class="form-control" @bind-Value="_checkout.Email" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="fullName">Full name</label>
+            <InputText id="fullName" class="form-control" @bind-Value="_checkout.FullName" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="phone">Phone</label>
+            <InputText id="phone" class="form-control" @bind-Value="_checkout.Phone" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="address">Delivery address</label>
+            <InputText id="address" class="form-control" @bind-Value="_checkout.DeliveryAddress" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="alert alert-danger">@_error</div>
+        }
+
+        <button type="submit" class="btn btn-success me-2">Place order</button>
+        <a class="btn btn-link" href="/cart">Back to cart</a>
+    </EditForm>
+}
+
+<ConfirmModal IsVisible="_showConfirm"
+              Title="Confirm order"
+              Message="Place this order and clear the cart?"
+              ConfirmText="Place order"
+              OnConfirmed="ConfirmPlaceOrderAsync"
+              OnCancelled="() => _showConfirm = false" />
+
+@code {
+    private CheckoutDto _checkout = new();
+    private IReadOnlyList<CartItemDto> _cartItems = Array.Empty<CartItemDto>();
+    private decimal _cartTotal;
+    private bool _showConfirm;
+    private string? _error;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _cartItems = await CartService.GetItemsAsync();
+        _cartTotal = await CartService.GetTotalAsync();
+    }
+
+    private void ShowConfirm() => _showConfirm = true;
+
+    private async Task ConfirmPlaceOrderAsync()
+    {
+        _showConfirm = false;
+        _error = null;
+
+        try
+        {
+            var userId = await Api.UpsertUserAsync(_checkout);
+            UserSession.CurrentUserId = userId;
+
+            var order = await Api.CreateOrderAsync(new OrderCreateDto
+            {
+                UserId = userId,
+                Items = _cartItems.Select(i => new OrderLineDto
+                {
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity
+                }).ToList()
+            });
+
+            await CartService.ClearAsync();
+            Navigation.NavigateTo($"/orders?placed={order.Id}", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+}

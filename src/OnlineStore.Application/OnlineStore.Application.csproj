@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\OnlineStore.Domain\OnlineStore.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RootNamespace>OnlineStore.Application</RootNamespace>
+  </PropertyGroup>
+
+</Project>

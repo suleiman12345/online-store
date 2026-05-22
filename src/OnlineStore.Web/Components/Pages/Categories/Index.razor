@@ -1,0 +1,128 @@
+@page "/categories"
+@rendermode InteractiveServer
+@inject IStoreApiClient Api
+
+<PageTitle>Categories</PageTitle>
+
+<h1>Categories</h1>
+
+<div class="row">
+    <div class="col-md-5">
+        <h2>@(_editingId is null ? "Create" : "Edit")</h2>
+        <EditForm Model="_formModel" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="mb-3">
+                <label class="form-label" for="catName">Name</label>
+                <InputText id="catName" class="form-control" @bind-Value="_formModel.Name" />
+            </div>
+            <button type="submit" class="btn btn-primary me-2">Save</button>
+            @if (_editingId is not null)
+            {
+                <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+            }
+        </EditForm>
+    </div>
+    <div class="col-md-7">
+        <h2>List</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in _categories)
+                {
+                    <tr>
+                        <td>@category.Name</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Edit(category)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => AskDelete(category)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<ConfirmModal IsVisible="_showDeleteModal"
+              Title="Delete category"
+              Message="@_deleteMessage"
+              ConfirmText="Delete"
+              OnConfirmed="ConfirmDeleteAsync"
+              OnCancelled="CloseDeleteModal" />
+
+@code {
+    private IReadOnlyList<CategoryDto> _categories = Array.Empty<CategoryDto>();
+    private CategoryCreateDto _formModel = new();
+    private Guid? _editingId;
+    private bool _showDeleteModal;
+    private string _deleteMessage = string.Empty;
+    private Guid? _deleteId;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() =>
+        _categories = await Api.GetCategoriesAsync();
+
+    private void Edit(CategoryDto category)
+    {
+        _editingId = category.Id;
+        _formModel = new CategoryCreateDto { Name = category.Name };
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _formModel = new CategoryCreateDto();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_formModel.Name))
+        {
+            return;
+        }
+
+        if (_editingId is null)
+        {
+            await Api.CreateCategoryAsync(_formModel);
+        }
+        else
+        {
+            await Api.UpdateCategoryAsync(_editingId.Value, new CategoryUpdateDto { Name = _formModel.Name });
+        }
+
+        _formModel = new CategoryCreateDto();
+        _editingId = null;
+        await LoadAsync();
+    }
+
+    private void AskDelete(CategoryDto category)
+    {
+        _deleteId = category.Id;
+        _deleteMessage = $"Delete category \"{category.Name}\"?";
+        _showDeleteModal = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        _showDeleteModal = false;
+        _deleteId = null;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        if (_deleteId is not null)
+        {
+            await Api.DeleteCategoryAsync(_deleteId.Value);
+            await LoadAsync();
+        }
+
+        CloseDeleteModal();
+    }
+}

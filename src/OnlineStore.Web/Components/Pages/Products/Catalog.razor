@@ -1,0 +1,70 @@
+@page "/products"
+@rendermode InteractiveServer
+@inject IStoreApiClient Api
+@inject ICartService CartService
+@inject NavigationManager Navigation
+
+<PageTitle>Product Catalog</PageTitle>
+
+<h1>Product Catalog</h1>
+
+@if (_loading)
+{
+    <p>Loading...</p>
+}
+else if (_products.Count == 0)
+{
+    <p class="text-muted">No products yet.</p>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var product in _products)
+        {
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a href="/products/@product.Id">@product.Name</a>
+                        </h5>
+                        <p class="card-text text-muted">@product.CategoryName</p>
+                        <p class="card-text">@product.Price.ToString("C")</p>
+                        @if (product.Tags.Count > 0)
+                        {
+                            <div class="mb-2">
+                                @foreach (var tag in product.Tags)
+                                {
+                                    <span class="badge bg-secondary me-1">@tag</span>
+                                }
+                            </div>
+                        }
+                        <p class="small">In stock: @product.StockQuantity</p>
+                        <button class="btn btn-primary btn-sm"
+                                disabled="@(product.StockQuantity == 0)"
+                                @onclick="() => AddToCart(product)">
+                            Add to cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<ProductDto> _products = Array.Empty<ProductDto>();
+    private bool _loading = true;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await Api.GetProductsAsync();
+        _loading = false;
+    }
+
+    private async Task AddToCart(ProductDto product)
+    {
+        await CartService.AddItemAsync(product.Id, product.Name, product.Price, 1);
+        Navigation.NavigateTo("/cart", forceLoad: true);
+    }
+}

@@ -1,0 +1,78 @@
+@page "/cart"
+@rendermode InteractiveServer
+@inject ICartService CartService
+@inject NavigationManager Navigation
+
+<PageTitle>Shopping Cart</PageTitle>
+
+<h1>Shopping Cart</h1>
+
+@if (_items.Count == 0)
+{
+    <p class="text-muted">Your cart is empty.</p>
+    <a class="btn btn-primary" href="/products">Browse products</a>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in _items)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>@item.UnitPrice.ToString("C")</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm w-auto"
+                               min="1" value="@item.Quantity"
+                               @onchange="e => UpdateQty(item.ProductId, e)" />
+                    </td>
+                    <td>@item.LineTotal.ToString("C")</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Remove(item.ProductId)">Remove</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p class="fw-bold">Subtotal: @_total.ToString("C")</p>
+    <a class="btn btn-success" href="/checkout">Proceed to checkout</a>
+}
+
+@code {
+    private IReadOnlyList<CartItemDto> _items = Array.Empty<CartItemDto>();
+    private decimal _total;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync() => await RefreshAsync();
+
+    private async Task RefreshAsync()
+    {
+        _items = await CartService.GetItemsAsync();
+        _total = await CartService.GetTotalAsync();
+    }
+
+    private async Task UpdateQty(Guid productId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var qty))
+        {
+            await CartService.UpdateQuantityAsync(productId, qty);
+            await RefreshAsync();
+        }
+    }
+
+    private async Task Remove(Guid productId)
+    {
+        await CartService.RemoveItemAsync(productId);
+        await RefreshAsync();
+    }
+}
