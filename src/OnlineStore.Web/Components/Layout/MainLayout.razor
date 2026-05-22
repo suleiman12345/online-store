@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 @inject ICartService CartService
+@inject NavigationManager Navigation
 
 <div class="page">
     <div class="sidebar">
@@ -25,6 +27,18 @@
     /// <inheritdoc />
     protected override void OnInitialized()
     {
-        _cartCount = CartService.GetItemCount();
+        Navigation.LocationChanged += OnLocationChanged;
+        RefreshCartCount();
     }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        RefreshCartCount();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void RefreshCartCount() => _cartCount = CartService.GetItemCount();
+
+    /// <inheritdoc />
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
 }

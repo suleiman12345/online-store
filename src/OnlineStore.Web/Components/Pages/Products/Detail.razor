@@ -1,5 +1,4 @@
 @page "/products/{Id:guid}"
-@rendermode InteractiveServer
 @inject IStoreApiClient Api
 @inject ICartService CartService
 @inject NavigationManager Navigation
@@ -69,6 +68,6 @@ else
         }
 
         await CartService.AddItemAsync(_product.Id, _product.Name, _product.Price, _quantity);
-        Navigation.NavigateTo("/cart", forceLoad: true);
+        Navigation.NavigateTo("/cart");
     }
 }
