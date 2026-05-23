@@ -30,4 +30,26 @@ public class ProductApiService(HttpClient http) : IProductApiService
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ProductDto>();
     }
+
+    public async Task<Guid> CreateAsync(ProductCreateDto dto)
+    {
+        var response = await http.PostAsJsonAsync("api/products", dto);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(
+                string.IsNullOrWhiteSpace(body)
+                    ? $"Create product failed ({(int)response.StatusCode})."
+                    : body);
+        }
+
+        var id = await response.Content.ReadFromJsonAsync<Guid>();
+        if (id == Guid.Empty)
+        {
+            throw new InvalidOperationException("API returned empty product id.");
+        }
+
+        return id;
+    }
 }

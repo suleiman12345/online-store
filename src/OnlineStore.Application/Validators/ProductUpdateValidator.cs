@@ -1,10 +1,11 @@
 using FluentValidation;
 using OnlineStore.Contracts.DTOs;
+using OnlineStore.Domain.Constants;
 
 namespace OnlineStore.Application.Validators;
 
 /// <summary>
-/// Validation rules for <see cref="ProductDto"/>.
+/// Validation rules for product updates.
 /// </summary>
 public class ProductUpdateValidator : AbstractValidator<ProductDto>
 {
@@ -15,18 +16,12 @@ public class ProductUpdateValidator : AbstractValidator<ProductDto>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .WithMessage("Name is required.");
+            .MaximumLength(EntityConstraints.NameMaxLength);
 
         RuleFor(x => x.Price)
-            .GreaterThan(0)
-            .WithMessage("Price must be greater than zero.");
-
-        RuleFor(x => x.StockQuantity)
-            .GreaterThanOrEqualTo(0)
-            .WithMessage("Stock quantity cannot be negative.");
+            .GreaterThan(0);
 
         RuleFor(x => x.CategoryId)
-            .NotEmpty()
-            .WithMessage("CategoryId is required.");
+            .NotEmpty();
     }
 }

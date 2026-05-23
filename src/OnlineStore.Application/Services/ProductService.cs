@@ -42,7 +42,7 @@ public class ProductService : IProductService
         return MapToDto(product, category?.Name);
     }
 
-    public async Task<Guid> CreateAsync(ProductDto dto, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateAsync(ProductCreateDto dto, CancellationToken cancellationToken = default)
     {
         var category = await _categoryRepository.GetByIdAsync(dto.CategoryId, cancellationToken);
 

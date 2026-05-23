@@ -1,0 +1,141 @@
+@page "/products/create"
+
+<PageTitle>Create product</PageTitle>
+
+<h1 class="mb-4">Create product</h1>
+
+@if (_loadingCategories)
+{
+    <div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+    <EditForm Model="_form" OnValidSubmit="SubmitAsync" class="card p-4" style="max-width: 32rem;">
+        <div class="mb-3">
+            <label class="form-label" for="name">Name</label>
+            <InputText id="name" class="form-control" @bind-Value="_form.Name" />
+            @if (_fieldErrors.TryGetValue(nameof(ProductCreateFormModel.Name), out var nameError))
+            {
+                <div class="text-danger small mt-1">@nameError</div>
+            }
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="price">Price</label>
+            <InputNumber id="price" class="form-control" @bind-Value="_form.Price" />
+            @if (_fieldErrors.TryGetValue(nameof(ProductCreateFormModel.Price), out var priceError))
+            {
+                <div class="text-danger small mt-1">@priceError</div>
+            }
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="category">Category</label>
+            <InputSelect id="category" class="form-select" @bind-Value="_form.CategoryId">
+                <option value="@Guid.Empty">— Select category —</option>
+                @foreach (var category in _categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </InputSelect>
+            @if (_fieldErrors.TryGetValue(nameof(ProductCreateFormModel.CategoryId), out var categoryError))
+            {
+                <div class="text-danger small mt-1">@categoryError</div>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(_submitError))
+        {
+            <div class="alert alert-danger">@_submitError</div>
+        }
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary" disabled="@_submitting">
+                @(_submitting ? "Saving..." : "Create")
+            </button>
+            <a class="btn btn-outline-secondary" href="/products">Cancel</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Inject]
+    private IProductApiService ProductApi { get; set; } = default!;
+
+    [Inject]
+    private ICollectionApiService CollectionApi { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private IValidator<ProductCreateFormModel> Validator { get; set; } = default!;
+
+    private readonly ProductCreateFormModel _form = new();
+    private readonly List<CategoryDto> _categories = [];
+    private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+
+    private bool _loadingCategories = true;
+    private bool _submitting;
+    private string? _submitError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _categories.AddRange(await CollectionApi.GetAllAsync());
+        }
+        catch (Exception ex)
+        {
+            _submitError = $"Failed to load categories: {ex.Message}";
+        }
+        finally
+        {
+            _loadingCategories = false;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        _fieldErrors.Clear();
+        _submitError = null;
+
+        var validation = await Validator.ValidateAsync(_form);
+        if (!validation.IsValid)
+        {
+            foreach (var failure in validation.Errors)
+            {
+                _fieldErrors[failure.PropertyName] = failure.ErrorMessage;
+            }
+
+            return;
+        }
+
+        _submitting = true;
+
+        try
+        {
+            var dto = new ProductCreateDto
+            {
+                Name = _form.Name.Trim(),
+                Price = _form.Price,
+                CategoryId = _form.CategoryId,
+            };
+
+            var id = await ProductApi.CreateAsync(dto);
+            Navigation.NavigateTo($"/products/{id}");
+        }
+        catch (HttpRequestException ex)
+        {
+            _submitError = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            _submitError = $"Failed to create product: {ex.Message}";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+}

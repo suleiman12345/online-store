@@ -25,7 +25,7 @@ public interface IProductService
     /// <summary>
     /// Создаёт товар.
     /// </summary>
-    Task<Guid> CreateAsync(ProductDto dto, CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync(ProductCreateDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Обновляет товар.

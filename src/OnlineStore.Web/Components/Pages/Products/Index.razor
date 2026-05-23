@@ -2,7 +2,9 @@
 
 <PageTitle>Products</PageTitle>
 
-<h1 class="mb-4">Products</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Products</h1>
+</div>
 
 @if (CategoryId.HasValue)
 {
@@ -62,6 +64,8 @@ else
                 }
             </tbody>
         </table>
+    <a class="btn btn-primary" href="/products/create">Create product</a>
+
     </div>
 
     @if (!string.IsNullOrEmpty(_cartMessage))

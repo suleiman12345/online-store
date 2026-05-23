@@ -51,7 +51,7 @@ public class ProductsController : ControllerBase
     /// Создать товар.
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<Guid>> Create(ProductDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<Guid>> Create(ProductCreateDto dto, CancellationToken cancellationToken)
     {
         var id = await _productService.CreateAsync(dto, cancellationToken);
 
