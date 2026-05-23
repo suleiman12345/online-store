@@ -1,8 +1,12 @@
+// <copyright file="GenericRepository.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Infrastructure.Repositories;
+
 using Microsoft.EntityFrameworkCore;
 using OnlineStore.Application.Interfaces.Repositories;
 using OnlineStore.Infrastructure.Data;
-
-namespace OnlineStore.Infrastructure.Repositories;
 
 /// <summary>
 /// Базовая реализация репозитория на EF Core.
@@ -15,20 +19,20 @@ public class GenericRepository<T> : IRepository<T> where T : class
 
     public GenericRepository(AppDbContext context)
     {
-        _context = context;
-        _dbSet = context.Set<T>();
+        this._context = context;
+        this._dbSet = context.Set<T>();
     }
 
     /// <inheritdoc />
     public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
+        return await this._dbSet.FindAsync(new object[] { id }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet
+        return await this._dbSet
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -36,24 +40,24 @@ public class GenericRepository<T> : IRepository<T> where T : class
     /// <inheritdoc />
     public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
-        await _dbSet.AddAsync(entity, cancellationToken);
+        await this._dbSet.AddAsync(entity, cancellationToken);
     }
 
     /// <inheritdoc />
     public void Update(T entity)
     {
-        _dbSet.Update(entity);
+        this._dbSet.Update(entity);
     }
 
     /// <inheritdoc />
     public void Remove(T entity)
     {
-        _dbSet.Remove(entity);
+        this._dbSet.Remove(entity);
     }
 
     /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync(cancellationToken);
+        await this._context.SaveChangesAsync(cancellationToken);
     }
 }

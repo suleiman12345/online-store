@@ -1,9 +1,13 @@
-using OnlineStore.Contracts.DTOs;
-using OnlineStore.Application.Interfaces.Repositories;
-using OnlineStore.Application.Interfaces.Services;
-using OnlineStore.Domain.Entities;
+// <copyright file="ProductService.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Application.Services;
+
+using OnlineStore.Application.Interfaces.Repositories;
+using OnlineStore.Application.Interfaces.Services;
+using OnlineStore.Contracts.DTOs;
+using OnlineStore.Domain.Entities;
 
 /// <summary>
 /// Сервис работы с товарами.
@@ -17,34 +21,37 @@ public class ProductService : IProductService
         IProductRepository productRepository,
         ICategoryRepository categoryRepository)
     {
-        _productRepository = productRepository;
-        _categoryRepository = categoryRepository;
+        this._productRepository = productRepository;
+        this._categoryRepository = categoryRepository;
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<ProductDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var products = await _productRepository.GetAllAsync(cancellationToken);
-        var categories = await _categoryRepository.GetAllAsync(cancellationToken);
+        var products = await this._productRepository.GetAllAsync(cancellationToken);
+        var categories = await this._categoryRepository.GetAllAsync(cancellationToken);
         var categoryNames = categories.ToDictionary(x => x.Id, x => x.Name);
 
         return products.Select(x => MapToDto(x, categoryNames.GetValueOrDefault(x.CategoryId))).ToList();
     }
 
+    /// <inheritdoc/>
     public async Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var product = await _productRepository.GetByIdAsync(id, cancellationToken);
+        var product = await this._productRepository.GetByIdAsync(id, cancellationToken);
 
         if (product == null)
             return null;
 
-        var category = await _categoryRepository.GetByIdAsync(product.CategoryId, cancellationToken);
+        var category = await this._categoryRepository.GetByIdAsync(product.CategoryId, cancellationToken);
 
         return MapToDto(product, category?.Name);
     }
 
+    /// <inheritdoc/>
     public async Task<Guid> CreateAsync(ProductCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var category = await _categoryRepository.GetByIdAsync(dto.CategoryId, cancellationToken);
+        var category = await this._categoryRepository.GetByIdAsync(dto.CategoryId, cancellationToken);
 
         if (category == null)
             throw new KeyNotFoundException("Category not found");
@@ -57,15 +64,16 @@ public class ProductService : IProductService
             CategoryId = dto.CategoryId
         };
 
-        await _productRepository.AddAsync(entity, cancellationToken);
-        await _productRepository.SaveChangesAsync(cancellationToken);
+        await this._productRepository.AddAsync(entity, cancellationToken);
+        await this._productRepository.SaveChangesAsync(cancellationToken);
 
         return entity.Id;
     }
 
+    /// <inheritdoc/>
     public async Task UpdateAsync(Guid id, ProductDto dto, CancellationToken cancellationToken = default)
     {
-        var entity = await _productRepository.GetByIdAsync(id, cancellationToken);
+        var entity = await this._productRepository.GetByIdAsync(id, cancellationToken);
 
         if (entity == null)
             throw new KeyNotFoundException("Product not found");
@@ -74,24 +82,26 @@ public class ProductService : IProductService
         entity.Price = dto.Price;
         entity.CategoryId = dto.CategoryId;
 
-        _productRepository.Update(entity);
-        await _productRepository.SaveChangesAsync(cancellationToken);
+        this._productRepository.Update(entity);
+        await this._productRepository.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc/>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await _productRepository.GetByIdAsync(id, cancellationToken);
+        var entity = await this._productRepository.GetByIdAsync(id, cancellationToken);
 
         if (entity == null)
             return;
 
-        _productRepository.Remove(entity);
-        await _productRepository.SaveChangesAsync(cancellationToken);
+        this._productRepository.Remove(entity);
+        await this._productRepository.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<ProductDto>> GetByCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
-        var products = await _productRepository.GetByCategoryIdAsync(categoryId, cancellationToken);
+        var products = await this._productRepository.GetByCategoryIdAsync(categoryId, cancellationToken);
 
         return products.Select(x => MapToDto(x, x.Category?.Name)).ToList();
     }

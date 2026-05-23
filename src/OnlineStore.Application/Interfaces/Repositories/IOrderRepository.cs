@@ -1,6 +1,10 @@
-using OnlineStore.Domain.Entities;
+// <copyright file="IOrderRepository.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Application.Interfaces.Repositories;
+
+using OnlineStore.Domain.Entities;
 
 /// <summary>
 /// Репозиторий для работы с заказами.

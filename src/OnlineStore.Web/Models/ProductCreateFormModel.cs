@@ -1,3 +1,7 @@
+// <copyright file="ProductCreateFormModel.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
 namespace OnlineStore.Web.Models;
 
 /// <summary>

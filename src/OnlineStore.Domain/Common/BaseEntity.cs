@@ -1,3 +1,7 @@
+// <copyright file="BaseEntity.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
 namespace OnlineStore.Domain.Common;
 
 /// <summary>

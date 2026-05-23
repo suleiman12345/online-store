@@ -1,23 +1,30 @@
+// <copyright file="ProductApiService.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Web.Services;
+
 using System.Net;
 using System.Net.Http.Json;
 using OnlineStore.Contracts.DTOs;
 
-namespace OnlineStore.Web.Services;
-
 public class ProductApiService(HttpClient http) : IProductApiService
 {
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<ProductDto>> GetAllAsync()
     {
         return await http.GetFromJsonAsync<List<ProductDto>>("api/products")
                ?? [];
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<ProductDto>> GetByCategoryAsync(Guid categoryId)
     {
         return await http.GetFromJsonAsync<List<ProductDto>>($"api/products?categoryId={categoryId}")
                ?? [];
     }
 
+    /// <inheritdoc/>
     public async Task<ProductDto?> GetByIdAsync(Guid id)
     {
         var response = await http.GetAsync($"api/products/{id}");
@@ -31,6 +38,7 @@ public class ProductApiService(HttpClient http) : IProductApiService
         return await response.Content.ReadFromJsonAsync<ProductDto>();
     }
 
+    /// <inheritdoc/>
     public async Task<Guid> CreateAsync(ProductCreateDto dto)
     {
         var response = await http.PostAsJsonAsync("api/products", dto);

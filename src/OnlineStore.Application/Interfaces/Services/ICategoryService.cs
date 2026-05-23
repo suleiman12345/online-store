@@ -1,6 +1,10 @@
-using OnlineStore.Contracts.DTOs;
+// <copyright file="ICategoryService.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Application.Interfaces.Services;
+
+using OnlineStore.Contracts.DTOs;
 
 /// <summary>
 /// Сервис работы с категориями.

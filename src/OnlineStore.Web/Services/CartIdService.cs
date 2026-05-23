@@ -1,42 +1,45 @@
-using Microsoft.JSInterop;
-using OnlineStore.Contracts;
+// <copyright file="CartIdService.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Web.Services;
 
-public class CartIdService(IJSRuntime jsRuntime, IConfiguration configuration) : ICartIdService
+using Microsoft.JSInterop;
+
+public class CartIdService(
+    IJSRuntime jsRuntime,
+    ICartApiService cartApiService) : ICartIdService
 {
     private const string StorageKey = "cartId";
     private Guid? _cartId;
 
+    /// <inheritdoc/>
     public async Task EnsureInitializedAsync()
     {
-        _ = await GetCartIdAsync();
+        _ = await this.GetCartIdAsync();
     }
 
+    /// <inheritdoc/>
     public async Task<Guid> GetCartIdAsync()
     {
-        if (_cartId.HasValue)
+        if (this._cartId.HasValue)
         {
-            return _cartId.Value;
+            return this._cartId.Value;
         }
 
         var stored = await jsRuntime.InvokeAsync<string?>("localStorage.getItem", StorageKey);
 
         if (Guid.TryParse(stored, out var parsed))
         {
-            _cartId = parsed;
+            this._cartId = parsed;
             return parsed;
         }
 
-        var defaultCartId = configuration["Cart:DefaultCartId"];
+        var newCartId = await cartApiService.CreateCartAsync();
 
-        if (!Guid.TryParse(defaultCartId, out var cartId))
-        {
-            cartId = StoreDefaults.DefaultCartId;
-        }
+        await jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, newCartId.ToString());
+        this._cartId = newCartId;
 
-        await jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, cartId.ToString());
-        _cartId = cartId;
-        return cartId;
+        return newCartId;
     }
 }

@@ -1,9 +1,13 @@
-using OnlineStore.Contracts.DTOs;
-using OnlineStore.Application.Interfaces.Repositories;
-using OnlineStore.Application.Interfaces.Services;
-using OnlineStore.Domain.Entities;
+// <copyright file="CartService.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Application.Services;
+
+using OnlineStore.Application.Interfaces.Repositories;
+using OnlineStore.Application.Interfaces.Services;
+using OnlineStore.Contracts.DTOs;
+using OnlineStore.Domain.Entities;
 
 /// <summary>
 /// Сервис работы с корзиной.
@@ -17,37 +21,50 @@ public class CartService : ICartService
         ICartRepository cartRepository,
         IProductRepository productRepository)
     {
-        _cartRepository = cartRepository;
-        _productRepository = productRepository;
+        this._cartRepository = cartRepository;
+        this._productRepository = productRepository;
     }
 
+    /// <inheritdoc/>
+    public async Task<Guid> CreateAsync(CancellationToken cancellationToken = default)
+    {
+        var entity = new Cart
+        {
+            Id = Guid.NewGuid(),
+            Items = [],
+        };
+
+        await this._cartRepository.AddAsync(entity, cancellationToken);
+
+        return entity.Id;
+    }
+
+    /// <inheritdoc/>
     public async Task<CartDto?> GetAsync(Guid cartId, CancellationToken cancellationToken = default)
     {
-        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken);
+        var cart = await this._cartRepository.GetCartWithItemsAsync(cartId, cancellationToken);
 
-        if (cart is null)
-        {
-            return null;
-        }
-
-        return MapToDto(cart);
+        return cart is null ? null : MapToDto(cart);
     }
 
+    /// <inheritdoc/>
     public Task AddItemAsync(Guid cartId, Guid productId, int quantity, CancellationToken cancellationToken = default)
-        => AddProductAsync(cartId, productId, quantity, cancellationToken);
+        => this.AddProductAsync(cartId, productId, quantity, cancellationToken);
 
+    /// <inheritdoc/>
     public Task RemoveItemAsync(Guid cartId, Guid productId, CancellationToken cancellationToken = default)
-        => RemoveProductAsync(cartId, productId, cancellationToken);
+        => this.RemoveProductAsync(cartId, productId, cancellationToken);
 
+    /// <inheritdoc/>
     public async Task ClearAsync(Guid cartId, CancellationToken cancellationToken = default)
     {
-        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
+        var cart = await this._cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
             ?? throw new KeyNotFoundException("Cart not found");
 
         cart.Items.Clear();
 
-        _cartRepository.Update(cart);
-        await _cartRepository.SaveChangesAsync(cancellationToken);
+        this._cartRepository.Update(cart);
+        await this._cartRepository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task AddProductAsync(
@@ -56,7 +73,7 @@ public class CartService : ICartService
         int quantity,
         CancellationToken cancellationToken = default)
     {
-        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken);
+        var cart = await this._cartRepository.GetCartWithItemsAsync(cartId, cancellationToken);
 
         if (cart is null)
         {
@@ -66,10 +83,10 @@ public class CartService : ICartService
                 Items = [],
             };
 
-            await _cartRepository.AddAsync(cart, cancellationToken);
+            await this._cartRepository.AddAsync(cart, cancellationToken);
         }
 
-        var product = await _productRepository.GetByIdAsync(productId, cancellationToken)
+        var product = await this._productRepository.GetByIdAsync(productId, cancellationToken)
             ?? throw new KeyNotFoundException("Product not found");
 
         var existingItem = cart.Items.FirstOrDefault(x => x.ProductId == productId);
@@ -80,7 +97,7 @@ public class CartService : ICartService
         }
         else
         {
-            await _cartRepository.AddItemAsync(new CartItem
+            await this._cartRepository.AddItemAsync(new CartItem
             {
                 Id = Guid.NewGuid(),
                 CartId = cart.Id,
@@ -90,12 +107,12 @@ public class CartService : ICartService
             }, cancellationToken);
         }
 
-        await _cartRepository.SaveChangesAsync(cancellationToken);
+        await this._cartRepository.SaveChangesAsync(cancellationToken);
     }
 
     public async Task RemoveProductAsync(Guid cartId, Guid productId, CancellationToken cancellationToken = default)
     {
-        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
+        var cart = await this._cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
             ?? throw new KeyNotFoundException("Cart not found");
 
         var item = cart.Items.FirstOrDefault(x => x.ProductId == productId);
@@ -107,13 +124,14 @@ public class CartService : ICartService
 
         cart.Items.Remove(item);
 
-        _cartRepository.Update(cart);
-        await _cartRepository.SaveChangesAsync(cancellationToken);
+        this._cartRepository.Update(cart);
+        await this._cartRepository.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc/>
     public async Task<int> GetItemCountAsync(Guid cartId, CancellationToken cancellationToken = default)
     {
-        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
+        var cart = await this._cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
             ?? throw new KeyNotFoundException("Cart not found");
 
         return cart.Items.Sum(x => x.Quantity);

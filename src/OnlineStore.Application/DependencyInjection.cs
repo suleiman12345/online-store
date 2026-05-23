@@ -1,10 +1,14 @@
+// <copyright file="DependencyInjection.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Application;
+
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using OnlineStore.Application.Interfaces.Services;
 using OnlineStore.Application.Services;
 using OnlineStore.Application.Validators;
-
-namespace OnlineStore.Application;
 
 /// <summary>
 /// Application layer dependency injection extensions.

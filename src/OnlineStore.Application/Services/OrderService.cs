@@ -1,9 +1,13 @@
-using OnlineStore.Contracts.DTOs;
-using OnlineStore.Application.Interfaces.Repositories;
-using OnlineStore.Application.Interfaces.Services;
-using OnlineStore.Domain.Entities;
+// <copyright file="OrderService.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Application.Services;
+
+using OnlineStore.Application.Interfaces.Repositories;
+using OnlineStore.Application.Interfaces.Services;
+using OnlineStore.Contracts.DTOs;
+using OnlineStore.Domain.Entities;
 
 /// <summary>
 /// Сервис работы с заказами.
@@ -17,13 +21,14 @@ public class OrderService : IOrderService
         IOrderRepository orderRepository,
         ICartRepository cartRepository)
     {
-        _orderRepository = orderRepository;
-        _cartRepository = cartRepository;
+        this._orderRepository = orderRepository;
+        this._cartRepository = cartRepository;
     }
 
+    /// <inheritdoc/>
     public async Task<Guid> CreateFromCartAsync(Guid cartId, CancellationToken cancellationToken = default)
     {
-        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
+        var cart = await this._cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
             ?? throw new KeyNotFoundException("Cart not found");
 
         if (cart.Items.Count == 0)
@@ -44,30 +49,33 @@ public class OrderService : IOrderService
             }).ToList(),
         };
 
-        await _orderRepository.AddAsync(order, cancellationToken);
-        await _orderRepository.SaveChangesAsync(cancellationToken);
+        await this._orderRepository.AddAsync(order, cancellationToken);
+        await this._orderRepository.SaveChangesAsync(cancellationToken);
 
         return order.Id;
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<OrderDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var orders = await _orderRepository.GetAllWithItemsAsync(cancellationToken);
+        var orders = await this._orderRepository.GetAllWithItemsAsync(cancellationToken);
         return orders.Select(MapToDto).ToList();
     }
 
+    /// <inheritdoc/>
     public async Task<OrderDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var order = await _orderRepository.GetWithItemsAsync(id, cancellationToken);
+        var order = await this._orderRepository.GetWithItemsAsync(id, cancellationToken);
         return order is null ? null : MapToDto(order);
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<OrderDto>> GetByDateRangeAsync(
         DateTime from,
         DateTime to,
         CancellationToken cancellationToken = default)
     {
-        var orders = await _orderRepository.GetByDateRangeAsync(from, to, cancellationToken);
+        var orders = await this._orderRepository.GetByDateRangeAsync(from, to, cancellationToken);
         return orders.Select(MapToDto).ToList();
     }
 

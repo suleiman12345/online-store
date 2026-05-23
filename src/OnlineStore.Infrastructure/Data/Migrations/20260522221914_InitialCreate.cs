@@ -1,10 +1,14 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿// <copyright file="20260522221914_InitialCreate.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 #nullable disable
 
 namespace OnlineStore.Infrastructure.Data.Migrations
 {
+    using System;
+    using Microsoft.EntityFrameworkCore.Migrations;
+
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {

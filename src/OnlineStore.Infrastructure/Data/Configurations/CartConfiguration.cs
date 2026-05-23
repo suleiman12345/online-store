@@ -1,14 +1,19 @@
+// <copyright file="CartConfiguration.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Infrastructure.Persistence.Configurations;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OnlineStore.Domain.Entities;
-
-namespace OnlineStore.Infrastructure.Persistence.Configurations;
 
 /// <summary>
 /// EF Core конфигурация корзины.
 /// </summary>
 public class CartConfiguration : IEntityTypeConfiguration<Cart>
 {
+    /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<Cart> builder)
 {
     builder.ToTable("Carts");

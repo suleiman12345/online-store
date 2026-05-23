@@ -1,12 +1,21 @@
-using OnlineStore.Contracts.DTOs;
+// <copyright file="ICartService.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Application.Interfaces.Services;
+
+using OnlineStore.Contracts.DTOs;
 
 /// <summary>
 /// Сервис работы с корзиной.
 /// </summary>
 public interface ICartService
 {
+    /// <summary>
+    /// Создание корзины.
+    /// </summary>
+    Task<Guid> CreateAsync(CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Получает корзину пользователя.
     /// </summary>

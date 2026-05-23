@@ -1,9 +1,13 @@
-using OnlineStore.Contracts.DTOs;
-using OnlineStore.Application.Interfaces.Repositories;
-using OnlineStore.Application.Interfaces.Services;
-using OnlineStore.Domain.Entities;
+// <copyright file="CategoryService.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Application.Services;
+
+using OnlineStore.Application.Interfaces.Repositories;
+using OnlineStore.Application.Interfaces.Services;
+using OnlineStore.Contracts.DTOs;
+using OnlineStore.Domain.Entities;
 
 public class CategoryService : ICategoryService
 {
@@ -11,12 +15,13 @@ public class CategoryService : ICategoryService
 
     public CategoryService(ICategoryRepository categoryRepository)
     {
-        _categoryRepository = categoryRepository;
+        this._categoryRepository = categoryRepository;
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<CategoryDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var categories = await _categoryRepository.GetAllAsync(cancellationToken);
+        var categories = await this._categoryRepository.GetAllAsync(cancellationToken);
 
         return categories
             .Select(x => new CategoryDto
@@ -27,9 +32,10 @@ public class CategoryService : ICategoryService
             .ToList();
     }
 
+    /// <inheritdoc/>
     public async Task<CategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var category = await _categoryRepository.GetByIdAsync(id, cancellationToken);
+        var category = await this._categoryRepository.GetByIdAsync(id, cancellationToken);
 
         if (category == null)
             return null;
@@ -41,6 +47,7 @@ public class CategoryService : ICategoryService
         };
     }
 
+    /// <inheritdoc/>
     public async Task<Guid> CreateAsync(CategoryDto dto, CancellationToken cancellationToken = default)
     {
         var entity = new Category
@@ -49,28 +56,30 @@ public class CategoryService : ICategoryService
             Name = dto.Name
         };
 
-        await _categoryRepository.AddAsync(entity, cancellationToken);
-        await _categoryRepository.SaveChangesAsync(cancellationToken);
+        await this._categoryRepository.AddAsync(entity, cancellationToken);
+        await this._categoryRepository.SaveChangesAsync(cancellationToken);
 
         return entity.Id;
     }
 
+    /// <inheritdoc/>
     public async Task UpdateAsync(Guid id, CategoryDto dto, CancellationToken cancellationToken = default)
     {
-        var category = await _categoryRepository.GetByIdAsync(id, cancellationToken);
+        var category = await this._categoryRepository.GetByIdAsync(id, cancellationToken);
 
         if (category == null)
             throw new KeyNotFoundException("Category not found");
 
         category.Name = dto.Name;
 
-        _categoryRepository.Update(category);
-        await _categoryRepository.SaveChangesAsync(cancellationToken);
+        this._categoryRepository.Update(category);
+        await this._categoryRepository.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc/>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await _categoryRepository.DeleteAsync(id, cancellationToken);
-        await _categoryRepository.SaveChangesAsync(cancellationToken);
+        await this._categoryRepository.DeleteAsync(id, cancellationToken);
+        await this._categoryRepository.SaveChangesAsync(cancellationToken);
     }
 }

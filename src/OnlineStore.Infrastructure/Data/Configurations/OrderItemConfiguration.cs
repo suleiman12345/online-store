@@ -1,14 +1,19 @@
+// <copyright file="OrderItemConfiguration.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Infrastructure.Persistence.Configurations;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OnlineStore.Domain.Entities;
-
-namespace OnlineStore.Infrastructure.Persistence.Configurations;
 
 /// <summary>
 /// EF Core конфигурация элемента заказа.
 /// </summary>
 public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
 {
+    /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<OrderItem> builder)
     {
         builder.ToTable("OrderItems");

@@ -8,7 +8,7 @@
 OnlineStore.sln
 src/
   OnlineStore.Domain/           # Сущности
-  OnlineStore.Contracts/        # DTO, общие константы (StoreDefaults)
+  OnlineStore.Contracts/        # DTO, общие константы
   OnlineStore.Application/      # Сервисы, FluentValidation, интерфейсы репозиториев
   OnlineStore.Infrastructure/   # EF Core, конфигурации, репозитории, миграции
   OnlineStore.Api/              # REST API
@@ -22,16 +22,16 @@ deploy/nginx.conf               # SPA fallback для Blazor
 
 ## Архитектура
 
-| Слой | Ответственность |
-|------|-----------------|
-| **Domain** | `Category`, `Product`, `Cart`, `CartItem`, `Order`, `OrderItem` |
-| **Contracts** | DTO, `StoreDefaults` |
-| **Application** | Сервисы, FluentValidation |
-| **Infrastructure** | `AppDbContext`, репозитории, миграции, seed |
-| **Api** | REST: Products, Categories, Collections, Cart, Orders |
-| **Web** | Blazor WASM UI, вызовы API через `HttpClient` |
+| Слой               | Ответственность                                                 |
+| ------------------ | --------------------------------------------------------------- |
+| **Domain**         | `Category`, `Product`, `Cart`, `CartItem`, `Order`, `OrderItem` |
+| **Contracts**      | DTO                                                             |
+| **Application**    | Сервисы, FluentValidation                                       |
+| **Infrastructure** | `AppDbContext`, репозитории, миграции, seed                     |
+| **Api**            | REST: Products, Categories, Collections, Cart, Orders           |
+| **Web**            | Blazor WASM UI, вызовы API через `HttpClient`                   |
 
-Корзина хранится в PostgreSQL (`Carts`, `CartItems`). Клиент использует стабильный `cartId` из `localStorage` (или `StoreDefaults.DefaultCartId`).
+Корзина хранится в PostgreSQL (`Carts`, `CartItems`). Клиент использует стабильный `cartId` из `localStorage`.
 
 ## Требования
 
@@ -69,11 +69,11 @@ docker compose ps
 
 Параметры БД:
 
-| Параметр | Значение |
-|----------|----------|
-| Host | `localhost` |
-| Port | `5432` |
-| Database | `online_store` |
+| Параметр        | Значение                |
+| --------------- | ----------------------- |
+| Host            | `localhost`             |
+| Port            | `5432`                  |
+| Database        | `online_store`          |
 | User / Password | `postgres` / `postgres` |
 
 Строка подключения для API уже задана в `src/OnlineStore.Api/appsettings.json`.
@@ -94,7 +94,7 @@ dotnet tool restore
 dotnet run --project src/OnlineStore.Api/OnlineStore.Api.csproj
 ```
 
-При первом старте API автоматически применяет миграции и seed (категории, товары, пустая корзина `22222222-2222-2222-2222-222222222222`).
+При первом старте API автоматически применяет миграции и seed (категории, товары).
 
 Проверка:
 
@@ -117,9 +117,9 @@ dotnet run --project src/OnlineStore.Web/OnlineStore.Web.csproj
 
 ```json
 {
-  "Api": {
-    "BaseUrl": "http://localhost:5080"
-  }
+    "Api": {
+        "BaseUrl": "http://localhost:5080"
+    }
 }
 ```
 
@@ -174,11 +174,11 @@ curl -I http://localhost:5276/
 
 ### Шаг 4. Открыть приложение
 
-| Сервис | URL | Описание |
-|--------|-----|----------|
-| **web** | http://localhost:5276 | Blazor WASM (nginx, статика из `publish/wwwroot`) |
-| **api** | http://localhost:5080 | REST API, Swagger в Development |
-| **postgres** | `localhost:5432` | PostgreSQL (для внешних клиентов) |
+| Сервис       | URL                   | Описание                                          |
+| ------------ | --------------------- | ------------------------------------------------- |
+| **web**      | http://localhost:5276 | Blazor WASM (nginx, статика из `publish/wwwroot`) |
+| **api**      | http://localhost:5080 | REST API, Swagger в Development                   |
+| **postgres** | `localhost:5432`      | PostgreSQL (для внешних клиентов)                 |
 
 Внутри Docker-сети API доступен как `http://api:8080`, но браузер обращается к `http://localhost:5080`.
 
@@ -222,22 +222,22 @@ docker compose build
 
 ## Маршруты UI
 
-| Маршрут | Страница |
-|---------|----------|
-| `/`, `/categories` | Категории |
-| `/products` | Каталог товаров |
-| `/products/{id}` | Карточка товара |
-| `/cart` | Корзина, оформление заказа |
-| `/orders` | Заказы (формы + FluentValidation) |
+| Маршрут            | Страница                          |
+| ------------------ | --------------------------------- |
+| `/`, `/categories` | Категории                         |
+| `/products`        | Каталог товаров                   |
+| `/products/{id}`   | Карточка товара                   |
+| `/cart`            | Корзина, оформление заказа        |
+| `/orders`          | Заказы (формы + FluentValidation) |
 
 ## REST API (кратко)
 
-| Контроллер | Базовый путь |
-|------------|----------------|
-| Products | `GET/POST /api/products`, `GET/PUT/DELETE /api/products/{id}` |
-| Collections (Categories) | `GET /api/collections` |
-| Cart | `GET/POST/DELETE /api/cart/{cartId}/...` |
-| Orders | `GET /api/orders`, `GET /api/orders/{id}`, `POST /api/orders/from-cart/{cartId}`, `GET /api/orders/range?from=&to=` |
+| Контроллер               | Базовый путь                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| Products                 | `GET/POST /api/products`, `GET/PUT/DELETE /api/products/{id}`                                                       |
+| Collections (Categories) | `GET /api/collections`                                                                                              |
+| Cart                     | `GET/POST/DELETE /api/cart/{cartId}/...`                                                                            |
+| Orders                   | `GET /api/orders`, `GET /api/orders/{id}`, `POST /api/orders/from-cart/{cartId}`, `GET /api/orders/range?from=&to=` |
 
 ## Миграции
 
@@ -258,7 +258,7 @@ dotnet ef database update \
 
 ## Dockerfiles (multi-stage)
 
-| Файл | Этапы | Порт в контейнере | Снаружи (compose) |
-|------|--------|-------------------|-------------------|
-| `Dockerfile.api` | `sdk` → publish → `aspnet` | `8080` | `5080` |
-| `Dockerfile.web` | `sdk` → publish WASM → `nginx:alpine` | `80` | `5276` |
+| Файл             | Этапы                                 | Порт в контейнере | Снаружи (compose) |
+| ---------------- | ------------------------------------- | ----------------- | ----------------- |
+| `Dockerfile.api` | `sdk` → publish → `aspnet`            | `8080`            | `5080`            |
+| `Dockerfile.web` | `sdk` → publish WASM → `nginx:alpine` | `80`              | `5276`            |

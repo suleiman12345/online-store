@@ -1,7 +1,11 @@
-using FluentValidation;
-using OnlineStore.Contracts.DTOs;
+// <copyright file="OrderCreateValidator.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Application.Validators;
+
+using FluentValidation;
+using OnlineStore.Contracts.DTOs;
 
 /// <summary>
 /// Validation rules for <see cref="OrderDto"/>.
@@ -13,11 +17,11 @@ public class OrderCreateValidator : AbstractValidator<OrderDto>
     /// </summary>
     public OrderCreateValidator()
     {
-        RuleFor(x => x.Items)
+        this.RuleFor(x => x.Items)
             .NotEmpty()
             .WithMessage("Order must contain at least one item.");
 
-        RuleForEach(x => x.Items).ChildRules(line =>
+        this.RuleForEach(x => x.Items).ChildRules(line =>
         {
             line.RuleFor(l => l.ProductId)
                 .NotEmpty()

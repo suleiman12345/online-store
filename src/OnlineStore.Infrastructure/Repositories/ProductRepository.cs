@@ -1,9 +1,13 @@
+// <copyright file="ProductRepository.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Infrastructure.Repositories;
+
 using Microsoft.EntityFrameworkCore;
 using OnlineStore.Application.Interfaces.Repositories;
 using OnlineStore.Domain.Entities;
 using OnlineStore.Infrastructure.Data;
-
-namespace OnlineStore.Infrastructure.Repositories;
 
 /// <summary>
 /// EF Core реализация репозитория товаров.
@@ -18,9 +22,10 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     {
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<Product>> GetByCategoryIdAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
-        return await _context.Products
+        return await this._context.Products
             .AsNoTracking()
             .Include(x => x.Category)
             .Where(x => x.CategoryId == categoryId)
@@ -35,7 +40,7 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     /// <returns>Товар с категорией или null.</returns>
     public async Task<Product?> GetWithCategoryAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Products
+        return await this._context.Products
             .Include(x => x.Category)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }

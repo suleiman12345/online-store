@@ -1,7 +1,6 @@
-// using FluentValidation;
-// using OnlineStore.Contracts.DTOs;
-// using OnlineStore.Domain.Constants;
-
+// <copyright file="CheckoutValidator.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 // namespace OnlineStore.Application.Validators;
 
 // /// <summary>

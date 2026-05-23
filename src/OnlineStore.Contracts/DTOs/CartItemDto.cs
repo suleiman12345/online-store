@@ -1,3 +1,7 @@
+// <copyright file="CartItemDto.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
 namespace OnlineStore.Contracts.DTOs;
 
 /// <summary>

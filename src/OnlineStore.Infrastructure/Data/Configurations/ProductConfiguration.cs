@@ -1,14 +1,19 @@
+// <copyright file="ProductConfiguration.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Infrastructure.Persistence.Configurations;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using OnlineStore.Domain.Entities;
-
-namespace OnlineStore.Infrastructure.Persistence.Configurations;
 
 /// <summary>
 /// EF Core конфигурация товара.
 /// </summary>
 public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
+    /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<Product> builder)
     {
         builder.ToTable("Products");

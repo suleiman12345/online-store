@@ -1,6 +1,10 @@
-using OnlineStore.Domain.Common;
+// <copyright file="Order.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Domain.Entities;
+
+using OnlineStore.Domain.Common;
 
 /// <summary>
 /// Заказ.

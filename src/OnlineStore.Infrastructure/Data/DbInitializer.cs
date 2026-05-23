@@ -1,8 +1,11 @@
-using Microsoft.EntityFrameworkCore;
-using OnlineStore.Contracts;
-using OnlineStore.Domain.Entities;
+// <copyright file="DbInitializer.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Infrastructure.Data;
+
+using Microsoft.EntityFrameworkCore;
+using OnlineStore.Domain.Entities;
 
 /// <summary>
 /// Инициализатор базы данных.
@@ -59,14 +62,6 @@ public static class DbInitializer
         };
 
         await context.Products.AddRangeAsync(products);
-
-        var cart = new Cart
-        {
-            Id = StoreDefaults.DefaultCartId,
-            Items = [],
-        };
-
-        await context.Carts.AddAsync(cart);
 
         await context.SaveChangesAsync();
     }

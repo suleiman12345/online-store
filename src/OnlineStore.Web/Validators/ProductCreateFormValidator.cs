@@ -1,7 +1,11 @@
-using FluentValidation;
-using OnlineStore.Web.Models;
+// <copyright file="ProductCreateFormValidator.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Web.Validators;
+
+using FluentValidation;
+using OnlineStore.Web.Models;
 
 /// <summary>
 /// Client-side validation for product create form.
@@ -13,14 +17,14 @@ public class ProductCreateFormValidator : AbstractValidator<ProductCreateFormMod
     /// </summary>
     public ProductCreateFormValidator()
     {
-        RuleFor(x => x.Name)
+        this.RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(200);
 
-        RuleFor(x => x.Price)
+        this.RuleFor(x => x.Price)
             .GreaterThan(0);
 
-        RuleFor(x => x.CategoryId)
+        this.RuleFor(x => x.CategoryId)
             .NotEmpty();
     }
 }

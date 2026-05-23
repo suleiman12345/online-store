@@ -1,8 +1,12 @@
+// <copyright file="ProductCreateValidator.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Application.Validators;
+
 using FluentValidation;
 using OnlineStore.Contracts.DTOs;
 using OnlineStore.Domain.Constants;
-
-namespace OnlineStore.Application.Validators;
 
 /// <summary>
 /// Validation rules for <see cref="ProductCreateDto"/>.
@@ -14,14 +18,14 @@ public class ProductCreateValidator : AbstractValidator<ProductCreateDto>
     /// </summary>
     public ProductCreateValidator()
     {
-        RuleFor(x => x.Name)
+        this.RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(EntityConstraints.NameMaxLength);
 
-        RuleFor(x => x.Price)
+        this.RuleFor(x => x.Price)
             .GreaterThan(0);
 
-        RuleFor(x => x.CategoryId)
+        this.RuleFor(x => x.CategoryId)
             .NotEmpty();
     }
 }

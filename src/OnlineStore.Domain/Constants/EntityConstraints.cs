@@ -1,3 +1,7 @@
+// <copyright file="EntityConstraints.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
 namespace OnlineStore.Domain.Constants;
 
 /// <summary>

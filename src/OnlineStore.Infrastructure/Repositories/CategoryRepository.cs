@@ -1,8 +1,12 @@
+// <copyright file="CategoryRepository.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Infrastructure.Repositories;
+
 using OnlineStore.Application.Interfaces.Repositories;
 using OnlineStore.Domain.Entities;
 using OnlineStore.Infrastructure.Data;
-
-namespace OnlineStore.Infrastructure.Repositories;
 
 /// <summary>
 /// EF Core реализация репозитория категорий.
@@ -13,6 +17,7 @@ namespace OnlineStore.Infrastructure.Repositories;
 /// <param name="context">Контекст базы данных.</param>
 public class CategoryRepository(AppDbContext context) : GenericRepository<Category>(context), ICategoryRepository
 {
+    /// <inheritdoc/>
     public Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();

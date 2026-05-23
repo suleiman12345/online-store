@@ -1,11 +1,15 @@
+// <copyright file="DependencyInjection.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Infrastructure;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OnlineStore.Application.Interfaces.Repositories;
 using OnlineStore.Infrastructure.Data;
 using OnlineStore.Infrastructure.Repositories;
-
-namespace OnlineStore.Infrastructure;
 
 /// <summary>
 /// Infrastructure layer dependency injection extensions.
