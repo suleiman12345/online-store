@@ -1,77 +1,188 @@
 @page "/cart"
-@inject ICartService CartService
-@inject NavigationManager Navigation
 
-<PageTitle>Shopping Cart</PageTitle>
+<PageTitle>Cart</PageTitle>
 
-<h1>Shopping Cart</h1>
+<h1 class="mb-4">Cart</h1>
 
-@if (_items.Count == 0)
+@if (_loading)
+{
+    <div class="spinner-border text-primary" role="status"></div>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_cart is null || _cart.Items.Count == 0)
 {
     <p class="text-muted">Your cart is empty.</p>
     <a class="btn btn-primary" href="/products">Browse products</a>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Qty</th>
-                <th>Total</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in _items)
-            {
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
                 <tr>
-                    <td>@item.ProductName</td>
-                    <td>@item.UnitPrice.ToString("C")</td>
-                    <td>
-                        <input type="number" class="form-control form-control-sm w-auto"
-                               min="1" value="@item.Quantity"
-                               @onchange="e => UpdateQty(item.ProductId, e)" />
-                    </td>
-                    <td>@item.LineTotal.ToString("C")</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Remove(item.ProductId)">Remove</button>
-                    </td>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Line total</th>
+                    <th></th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in _cart.Items)
+                {
+                    var lineTotal = item.Price * item.Quantity;
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Price.ToString("C")</td>
+                        <td>@lineTotal.ToString("C")</td>
+                        <td>
+                            <button class="btn btn-outline-danger btn-sm"
+                                    disabled="@_busy"
+                                    @onclick="() => RemoveItemAsync(item.ProductId)">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3" class="text-end">Total</th>
+                    <th>@Total.ToString("C")</th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
 
-    <p class="fw-bold">Subtotal: @_total.ToString("C")</p>
-    <a class="btn btn-success" href="/checkout">Proceed to checkout</a>
+    <div class="d-flex gap-2 mt-3">
+        <button class="btn btn-primary" disabled="@_busy" @onclick="PlaceOrderAsync">
+            Place order
+        </button>
+        <button class="btn btn-danger" disabled="@_busy" @onclick="ClearCartAsync">
+            Clear cart
+        </button>
+        <a class="btn btn-outline-secondary" href="/orders">View orders</a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_orderMessage))
+    {
+        <p class="success-text mt-2">@_orderMessage</p>
+    }
 }
 
 @code {
-    private IReadOnlyList<CartItemDto> _items = Array.Empty<CartItemDto>();
-    private decimal _total;
+    [Inject]
+    private ICartApiService CartApi { get; set; } = default!;
 
-    /// <inheritdoc />
-    protected override async Task OnInitializedAsync() => await RefreshAsync();
+    [Inject]
+    private ICartIdService CartIdService { get; set; } = default!;
 
-    private async Task RefreshAsync()
+    [Inject]
+    private IOrderApiService OrderApi { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    private CartDto? _cart;
+    private bool _loading = true;
+    private bool _busy;
+    private string? _error;
+    private string? _orderMessage;
+
+    private decimal Total => _cart?.Items.Sum(x => x.Price * x.Quantity) ?? 0;
+
+    protected override async Task OnInitializedAsync()
     {
-        _items = await CartService.GetItemsAsync();
-        _total = await CartService.GetTotalAsync();
+        await RefreshCartAsync();
     }
 
-    private async Task UpdateQty(Guid productId, ChangeEventArgs e)
+    private async Task RefreshCartAsync()
     {
-        if (int.TryParse(e.Value?.ToString(), out var qty))
+        _loading = true;
+        _error = null;
+
+        try
         {
-            await CartService.UpdateQuantityAsync(productId, qty);
-            await RefreshAsync();
+            await CartIdService.EnsureInitializedAsync();
+            var cartId = await CartIdService.GetCartIdAsync();
+            _cart = await CartApi.GetCartAsync(cartId);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load cart: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
         }
     }
 
-    private async Task Remove(Guid productId)
+    private async Task RemoveItemAsync(Guid productId)
     {
-        await CartService.RemoveItemAsync(productId);
-        await RefreshAsync();
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            var cartId = await CartIdService.GetCartIdAsync();
+            _cart = await CartApi.RemoveItemAsync(cartId, productId);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to remove item: {ex.Message}";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ClearCartAsync()
+    {
+        _busy = true;
+        _error = null;
+        _orderMessage = null;
+
+        try
+        {
+            var cartId = await CartIdService.GetCartIdAsync();
+            _cart = await CartApi.ClearAsync(cartId);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to clear cart: {ex.Message}";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task PlaceOrderAsync()
+    {
+        _busy = true;
+        _error = null;
+        _orderMessage = null;
+
+        try
+        {
+            var cartId = await CartIdService.GetCartIdAsync();
+            var orderId = await OrderApi.CreateFromCartAsync(cartId);
+            _orderMessage = "Order created.";
+            Navigation.NavigateTo($"/orders");
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to place order: {ex.Message}";
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 }

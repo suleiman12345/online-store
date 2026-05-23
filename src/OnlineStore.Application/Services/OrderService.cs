@@ -1,4 +1,4 @@
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
 using OnlineStore.Application.Interfaces.Repositories;
 using OnlineStore.Application.Interfaces.Services;
 using OnlineStore.Domain.Entities;
@@ -6,114 +6,88 @@ using OnlineStore.Domain.Entities;
 namespace OnlineStore.Application.Services;
 
 /// <summary>
-/// Order application service implementation.
+/// Сервис работы с заказами.
 /// </summary>
 public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
-    private readonly IProductRepository _productRepository;
+    private readonly ICartRepository _cartRepository;
 
-    /// <summary>
-    /// Initializes a new instance of <see cref="OrderService"/>.
-    /// </summary>
     public OrderService(
         IOrderRepository orderRepository,
-        IProductRepository productRepository)
+        ICartRepository cartRepository)
     {
         _orderRepository = orderRepository;
-        _productRepository = productRepository;
+        _cartRepository = cartRepository;
     }
 
-    /// <inheritdoc />
-    public async Task<OrderDto> CreateAsync(OrderCreateDto dto, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateFromCartAsync(Guid cartId, CancellationToken cancellationToken = default)
     {
-        if (dto.Items.Count == 0)
-        {
-            throw new InvalidOperationException("Order must contain at least one item.");
-        }
+        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
+            ?? throw new KeyNotFoundException("Cart not found");
+
+        if (cart.Items.Count == 0)
+            throw new InvalidOperationException("Cart is empty");
 
         var orderId = Guid.NewGuid();
-        var orderItems = new List<OrderItem>();
-        var lineTotals = new List<(decimal unitPrice, int quantity)>();
-
-        foreach (var line in dto.Items)
-        {
-            var product = await _productRepository.GetByIdAsync(line.ProductId, cancellationToken)
-                ?? throw new InvalidOperationException($"Product '{line.ProductId}' was not found.");
-
-            if (line.Quantity <= 0)
-            {
-                throw new InvalidOperationException("Quantity must be positive.");
-            }
-
-            if (product.StockQuantity < line.Quantity)
-            {
-                throw new InvalidOperationException($"Insufficient stock for product '{product.Name}'.");
-            }
-
-            product.StockQuantity -= line.Quantity;
-            _productRepository.Update(product);
-
-            orderItems.Add(new OrderItem
-            {
-                Id = Guid.NewGuid(),
-                OrderId = orderId,
-                ProductId = product.Id,
-                Quantity = line.Quantity,
-                Price = product.Price
-            });
-
-            lineTotals.Add((product.Price, line.Quantity));
-        }
-
         var order = new Order
         {
             Id = orderId,
-            UserId = dto.UserId,
             CreatedAt = DateTime.UtcNow,
-            TotalAmount = CalculateTotal(lineTotals),
-            OrderItems = orderItems
+            Items = cart.Items.Select(x => new OrderItem
+            {
+                Id = Guid.NewGuid(),
+                OrderId = orderId,
+                ProductId = x.ProductId,
+                Quantity = x.Quantity,
+                Price = x.UnitPrice > 0 ? x.UnitPrice : x.Product?.Price ?? 0,
+            }).ToList(),
         };
 
         await _orderRepository.AddAsync(order, cancellationToken);
         await _orderRepository.SaveChangesAsync(cancellationToken);
 
-        var created = await _orderRepository.GetByIdWithItemsAsync(orderId, cancellationToken);
-        return MapToDto(created!);
+        return order.Id;
     }
 
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<OrderDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<OrderDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var orders = await _orderRepository.GetByUserIdWithItemsAsync(userId, cancellationToken);
+        var orders = await _orderRepository.GetAllWithItemsAsync(cancellationToken);
         return orders.Select(MapToDto).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<OrderDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var order = await _orderRepository.GetByIdWithItemsAsync(id, cancellationToken);
+        var order = await _orderRepository.GetWithItemsAsync(id, cancellationToken);
         return order is null ? null : MapToDto(order);
     }
 
-    /// <inheritdoc />
-    public decimal CalculateTotal(IEnumerable<(decimal unitPrice, int quantity)> lines) =>
-        lines.Sum(l => l.unitPrice * l.quantity);
+    public async Task<IReadOnlyList<OrderDto>> GetByDateRangeAsync(
+        DateTime from,
+        DateTime to,
+        CancellationToken cancellationToken = default)
+    {
+        var orders = await _orderRepository.GetByDateRangeAsync(from, to, cancellationToken);
+        return orders.Select(MapToDto).ToList();
+    }
 
-    private static OrderDto MapToDto(Order order) =>
-        new()
+    private static OrderDto MapToDto(Order order)
+    {
+        var items = order.Items.Select(x => new OrderItemDto
+        {
+            OrderId = order.Id,
+            ProductId = x.ProductId,
+            ProductName = x.Product?.Name ?? string.Empty,
+            Price = x.Price,
+            Quantity = x.Quantity,
+        }).ToList();
+
+        return new OrderDto
         {
             Id = order.Id,
-            UserId = order.UserId,
             CreatedAt = order.CreatedAt,
-            TotalAmount = order.TotalAmount,
-            Items = order.OrderItems.Select(oi => new OrderItemDto
-            {
-                Id = oi.Id,
-                ProductId = oi.ProductId,
-                ProductName = oi.Product?.Name ?? string.Empty,
-                Quantity = oi.Quantity,
-                UnitPrice = oi.Price
-            }).ToList()
+            Items = items,
+            TotalPrice = items.Sum(x => x.Price * x.Quantity),
         };
+    }
 }

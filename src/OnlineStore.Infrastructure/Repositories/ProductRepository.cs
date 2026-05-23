@@ -6,33 +6,37 @@ using OnlineStore.Infrastructure.Data;
 namespace OnlineStore.Infrastructure.Repositories;
 
 /// <summary>
-/// EF Core repository for <see cref="Product"/> entities.
+/// EF Core реализация репозитория товаров.
 /// </summary>
 public class ProductRepository : GenericRepository<Product>, IProductRepository
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="ProductRepository"/>.
+    /// Инициализирует репозиторий товаров.
     /// </summary>
-    public ProductRepository(AppDbContext context)
-        : base(context)
+    /// <param name="context">Контекст базы данных.</param>
+    public ProductRepository(AppDbContext context) : base(context)
     {
     }
 
-    /// <inheritdoc />
-    public async Task<Product?> GetByIdWithCategoryAsync(Guid id, CancellationToken cancellationToken = default) =>
-        await DbSet
-            .Include(p => p.Category)
-            .Include(p => p.ProductTags)
-            .ThenInclude(pt => pt.Tag)
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<Product>> GetAllWithCategoryAsync(CancellationToken cancellationToken = default) =>
-        await DbSet
+    public async Task<IReadOnlyList<Product>> GetByCategoryIdAsync(Guid categoryId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Products
             .AsNoTracking()
-            .Include(p => p.Category)
-            .Include(p => p.ProductTags)
-            .ThenInclude(pt => pt.Tag)
-            .OrderBy(p => p.Name)
+            .Include(x => x.Category)
+            .Where(x => x.CategoryId == categoryId)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Получает товар вместе с категорией.
+    /// </summary>
+    /// <param name="id">Идентификатор товара.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>Товар с категорией или null.</returns>
+    public async Task<Product?> GetWithCategoryAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Products
+            .Include(x => x.Category)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
 }

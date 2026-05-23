@@ -1,0 +1,144 @@
+@page "/products"
+
+<PageTitle>Products</PageTitle>
+
+<h1 class="mb-4">Products</h1>
+
+@if (CategoryId.HasValue)
+{
+    <p class="text-muted mb-3">Filtered by category</p>
+}
+
+@if (_loading)
+{
+    <div class="spinner-border text-primary" role="status"></div>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_products.Count == 0)
+{
+    <p class="text-muted">No products found.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Category</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in _products)
+                {
+                    <tr>
+                        <td>
+                            <a href="@($"/products/{product.Id}")">@product.Name</a>
+                        </td>
+                        <td>@product.Price.ToString("C")</td>
+                        <td>@product.CategoryName</td>
+                        <td>
+                            <a class="btn btn-outline-secondary btn-sm me-1"
+                               href="@($"/products/{product.Id}")">View</a>
+                            <button class="btn btn-success btn-sm"
+                                    disabled="@_busyProductId.HasValue"
+                                    @onclick="() => AddToCartAsync(product.Id)">
+                                @if (_busyProductId == product.Id)
+                                {
+                                    <span>Adding...</span>
+                                }
+                                else
+                                {
+                                    <span>Add to Cart</span>
+                                }
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_cartMessage))
+    {
+        <div class="alert alert-success mt-3">@_cartMessage</div>
+    }
+}
+
+@code {
+    [Inject]
+    private IProductApiService ProductApi { get; set; } = default!;
+
+    [Inject]
+    private ICartApiService CartApi { get; set; } = default!;
+
+    [Inject]
+    private ICartIdService CartIdService { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    public Guid? CategoryId { get; set; }
+
+    private readonly List<ProductDto> _products = [];
+    private bool _loading = true;
+    private string? _error;
+    private string? _cartMessage;
+    private Guid? _busyProductId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadProductsAsync();
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        _loading = true;
+        _error = null;
+        _products.Clear();
+
+        try
+        {
+            var data = CategoryId.HasValue
+                ? await ProductApi.GetByCategoryAsync(CategoryId.Value)
+                : await ProductApi.GetAllAsync();
+
+            _products.AddRange(data);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load products: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task AddToCartAsync(Guid productId)
+    {
+        _busyProductId = productId;
+        _cartMessage = null;
+        _error = null;
+
+        try
+        {
+            await CartIdService.EnsureInitializedAsync();
+            var cartId = await CartIdService.GetCartIdAsync();
+            var cart = await CartApi.AddItemAsync(cartId, productId);
+            var itemCount = cart?.Items.Sum(x => x.Quantity) ?? 0;
+            _cartMessage = $"Added to cart. Cart now has {itemCount} item(s).";
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to add to cart: {ex.Message}";
+        }
+        finally
+        {
+            _busyProductId = null;
+        }
+    }
+}

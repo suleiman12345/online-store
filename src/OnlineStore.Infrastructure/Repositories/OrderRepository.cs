@@ -6,33 +6,48 @@ using OnlineStore.Infrastructure.Data;
 namespace OnlineStore.Infrastructure.Repositories;
 
 /// <summary>
-/// EF Core repository for <see cref="Order"/> entities.
+/// EF Core реализация репозитория заказов.
 /// </summary>
 public class OrderRepository : GenericRepository<Order>, IOrderRepository
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="OrderRepository"/>.
+    /// Инициализирует репозиторий заказов.
     /// </summary>
-    public OrderRepository(AppDbContext context)
-        : base(context)
+    /// <param name="context">Контекст базы данных.</param>
+    public OrderRepository(AppDbContext context) : base(context)
     {
     }
 
-    /// <inheritdoc />
-    public async Task<Order?> GetByIdWithItemsAsync(Guid id, CancellationToken cancellationToken = default) =>
-        await DbSet
-            .AsNoTracking()
-            .Include(o => o.OrderItems)
-            .ThenInclude(oi => oi.Product)
-            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+    public async Task<Order?> GetWithItemsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
+            .AsSplitQuery()
+            .Include(x => x.Items)
+                .ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
 
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<Order>> GetByUserIdWithItemsAsync(Guid userId, CancellationToken cancellationToken = default) =>
-        await DbSet
-            .AsNoTracking()
-            .Include(o => o.OrderItems)
-            .ThenInclude(oi => oi.Product)
-            .Where(o => o.UserId == userId)
-            .OrderByDescending(o => o.CreatedAt)
+    public async Task<IReadOnlyList<Order>> GetAllWithItemsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
+            .AsSplitQuery()
+            .Include(x => x.Items)
+                .ThenInclude(i => i.Product)
+            .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Order>> GetByDateRangeAsync(
+        DateTime from,
+        DateTime to,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
+            .AsSplitQuery()
+            .Include(x => x.Items)
+                .ThenInclude(i => i.Product)
+            .Where(x => x.CreatedAt >= from && x.CreatedAt <= to)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
 }

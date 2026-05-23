@@ -1,43 +1,23 @@
-using FluentValidation;
-using OnlineStore.Application.Interfaces.Services;
-using OnlineStore.Application.Services;
-using OnlineStore.Application.Validators;
-using OnlineStore.Web.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using OnlineStore.Web;
 using OnlineStore.Web.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+var apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5080";
 
-var apiBaseUrl = builder.Configuration["Api:BaseUrl"]
-    ?? throw new InvalidOperationException("Api:BaseUrl is not configured.");
-
-builder.Services.AddHttpClient<IStoreApiClient, StoreApiClient>(client =>
+builder.Services.AddScoped(_ => new HttpClient
 {
-    client.BaseAddress = new Uri(apiBaseUrl.TrimEnd('/') + "/");
+    BaseAddress = new Uri(apiBaseUrl.TrimEnd('/') + "/"),
 });
 
-builder.Services.AddValidatorsFromAssemblyContaining<CheckoutValidator>();
-builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+builder.Services.AddScoped<ICartIdService, CartIdService>();
+builder.Services.AddScoped<ICollectionApiService, CollectionApiService>();
+builder.Services.AddScoped<IProductApiService, ProductApiService>();
+builder.Services.AddScoped<ICartApiService, CartApiService>();
+builder.Services.AddScoped<IOrderApiService, OrderApiService>();
 
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
-}
-
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-app.UseHttpsRedirection();
-app.UseAntiforgery();
-
-app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
-
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-app.Run();
+await builder.Build().RunAsync();

@@ -1,65 +1,56 @@
-using System.Reflection;
-using FluentValidation.AspNetCore;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using OnlineStore.Application;
 using OnlineStore.Infrastructure;
 using OnlineStore.Infrastructure.Data;
+using OnlineStore.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
+/// <summary>
+/// Controllers + Swagger
+/// </summary>
 builder.Services.AddControllers();
-
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Online Store API",
-        Version = "v1",
-        Description = "REST API for the online store backend."
-    });
-
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
-    {
-        options.IncludeXmlComments(xmlPath);
-    }
-});
-
-builder.Services
-    .AddFluentValidationAutoValidation()
-    .AddFluentValidationClientsideAdapters();
-
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-        policy.AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowAnyOrigin());
+    options.AddDefaultPolicy(policy => policy
+        .WithOrigins(
+            "http://localhost:5276",
+            "https://localhost:7128")
+        .AllowAnyHeader()
+        .AllowAnyMethod());
 });
+
+/// <summary>
+/// Infrastructure (DbContext + Application + Repositories)
+/// </summary>
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+/// <summary>
+/// Dev pipeline
+/// </summary>
+if (app.Environment.IsDevelopment())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-    await DbInitializer.SeedAsync(db);
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-app.UseSwagger();
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Online Store API v1");
-    options.RoutePrefix = "swagger";
-});
-
 app.UseCors();
-app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
 app.MapControllers();
+
+/// <summary>
+/// DB migration + seeding
+/// </summary>
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbInitializer.InitializeAsync(context);
+}
 
 app.Run();

@@ -1,0 +1,59 @@
+@page "/"
+@page "/categories"
+
+<PageTitle>Categories</PageTitle>
+
+<h1 class="mb-4">Categories</h1>
+
+@if (_loading)
+{
+    <div class="spinner-border text-primary" role="status"></div>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_categories.Count == 0)
+{
+    <p class="text-muted">No categories found.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var category in _categories)
+        {
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <span>@category.Name</span>
+                <a class="btn btn-primary btn-sm" href="@($"/products?categoryId={category.Id}")">
+                    View Products
+                </a>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Inject]
+    private ICollectionApiService CollectionApi { get; set; } = default!;
+
+    private readonly List<CategoryDto> _categories = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var data = await CollectionApi.GetAllAsync();
+            _categories.AddRange(data);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load categories: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

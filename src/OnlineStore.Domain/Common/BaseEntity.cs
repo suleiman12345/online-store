@@ -1,12 +1,12 @@
 namespace OnlineStore.Domain.Common;
 
 /// <summary>
-/// Base entity with a unique identifier.
+/// Базовая сущность для всех таблиц.
 /// </summary>
 public abstract class BaseEntity
 {
     /// <summary>
-    /// Unique identifier.
+    /// Уникальный идентификатор.
     /// </summary>
     public Guid Id { get; set; }
 }

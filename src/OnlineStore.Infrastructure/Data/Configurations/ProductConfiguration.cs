@@ -1,43 +1,31 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OnlineStore.Domain.Constants;
 using OnlineStore.Domain.Entities;
 
-namespace OnlineStore.Infrastructure.Data.Configurations;
+namespace OnlineStore.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Fluent API configuration for <see cref="Product"/>.
+/// EF Core конфигурация товара.
 /// </summary>
 public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
-    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Product> builder)
     {
-        builder.ToTable("products");
+        builder.ToTable("Products");
 
-        builder.HasKey(p => p.Id);
+        builder.HasKey(x => x.Id);
 
-        builder.Property(p => p.Name)
+        builder.Property(x => x.Name)
             .IsRequired()
-            .HasMaxLength(EntityConstraints.NameMaxLength);
+            .HasMaxLength(200);
 
-        builder.Property(p => p.Description)
+        builder.Property(x => x.Price)
             .IsRequired()
-            .HasMaxLength(EntityConstraints.DescriptionMaxLength);
+            .HasColumnType("decimal(18,2)");
 
-        builder.Property(p => p.Price)
-            .IsRequired()
-            .HasPrecision(EntityConstraints.PricePrecision, EntityConstraints.PriceScale);
-
-        builder.Property(p => p.StockQuantity)
-            .IsRequired();
-
-        builder.Property(p => p.CategoryId)
-            .IsRequired();
-
-        builder.HasMany(p => p.OrderItems)
-            .WithOne(oi => oi.Product)
-            .HasForeignKey(oi => oi.ProductId)
+        builder.HasOne(x => x.Category)
+            .WithMany(x => x.Products)
+            .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -1,87 +1,136 @@
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
+using OnlineStore.Application.Interfaces.Repositories;
 using OnlineStore.Application.Interfaces.Services;
+using OnlineStore.Domain.Entities;
 
 namespace OnlineStore.Application.Services;
 
 /// <summary>
-/// In-memory shopping cart backed by <see cref="Dictionary{Guid, CartItemDto}"/>.
+/// Сервис работы с корзиной.
 /// </summary>
 public class CartService : ICartService
 {
-    private readonly Dictionary<Guid, CartItemDto> _items = new();
+    private readonly ICartRepository _cartRepository;
+    private readonly IProductRepository _productRepository;
 
-    /// <inheritdoc />
-    public Task<IReadOnlyList<CartItemDto>> GetItemsAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<CartItemDto>>(_items.Values.OrderBy(i => i.ProductName).ToList());
+    public CartService(
+        ICartRepository cartRepository,
+        IProductRepository productRepository)
+    {
+        _cartRepository = cartRepository;
+        _productRepository = productRepository;
+    }
 
-    /// <inheritdoc />
-    public Task AddItemAsync(
+    public async Task<CartDto?> GetAsync(Guid cartId, CancellationToken cancellationToken = default)
+    {
+        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken);
+
+        if (cart is null)
+        {
+            return null;
+        }
+
+        return MapToDto(cart);
+    }
+
+    public Task AddItemAsync(Guid cartId, Guid productId, int quantity, CancellationToken cancellationToken = default)
+        => AddProductAsync(cartId, productId, quantity, cancellationToken);
+
+    public Task RemoveItemAsync(Guid cartId, Guid productId, CancellationToken cancellationToken = default)
+        => RemoveProductAsync(cartId, productId, cancellationToken);
+
+    public async Task ClearAsync(Guid cartId, CancellationToken cancellationToken = default)
+    {
+        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
+            ?? throw new KeyNotFoundException("Cart not found");
+
+        cart.Items.Clear();
+
+        _cartRepository.Update(cart);
+        await _cartRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddProductAsync(
+        Guid cartId,
         Guid productId,
-        string productName,
-        decimal unitPrice,
         int quantity,
         CancellationToken cancellationToken = default)
     {
-        if (quantity <= 0)
+        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken);
+
+        if (cart is null)
         {
-            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be positive.");
+            cart = new Cart
+            {
+                Id = cartId,
+                Items = [],
+            };
+
+            await _cartRepository.AddAsync(cart, cancellationToken);
         }
 
-        if (_items.TryGetValue(productId, out var existing))
-        {
-            existing.Quantity += quantity;
-            return Task.CompletedTask;
-        }
+        var product = await _productRepository.GetByIdAsync(productId, cancellationToken)
+            ?? throw new KeyNotFoundException("Product not found");
 
-        _items[productId] = new CartItemDto
-        {
-            ProductId = productId,
-            ProductName = productName,
-            UnitPrice = unitPrice,
-            Quantity = quantity
-        };
+        var existingItem = cart.Items.FirstOrDefault(x => x.ProductId == productId);
 
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public Task UpdateQuantityAsync(Guid productId, int quantity, CancellationToken cancellationToken = default)
-    {
-        if (!_items.ContainsKey(productId))
+        if (existingItem is not null)
         {
-            throw new InvalidOperationException($"Product '{productId}' is not in the cart.");
-        }
-
-        if (quantity <= 0)
-        {
-            _items.Remove(productId);
+            existingItem.Quantity += quantity;
         }
         else
         {
-            _items[productId].Quantity = quantity;
+            await _cartRepository.AddItemAsync(new CartItem
+            {
+                Id = Guid.NewGuid(),
+                CartId = cart.Id,
+                ProductId = productId,
+                Quantity = quantity,
+                UnitPrice = product.Price,
+            }, cancellationToken);
         }
 
-        return Task.CompletedTask;
+        await _cartRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
-    public Task RemoveItemAsync(Guid productId, CancellationToken cancellationToken = default)
+    public async Task RemoveProductAsync(Guid cartId, Guid productId, CancellationToken cancellationToken = default)
     {
-        _items.Remove(productId);
-        return Task.CompletedTask;
+        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
+            ?? throw new KeyNotFoundException("Cart not found");
+
+        var item = cart.Items.FirstOrDefault(x => x.ProductId == productId);
+
+        if (item is null)
+        {
+            return;
+        }
+
+        cart.Items.Remove(item);
+
+        _cartRepository.Update(cart);
+        await _cartRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
-    public Task ClearAsync(CancellationToken cancellationToken = default)
+    public async Task<int> GetItemCountAsync(Guid cartId, CancellationToken cancellationToken = default)
     {
-        _items.Clear();
-        return Task.CompletedTask;
+        var cart = await _cartRepository.GetCartWithItemsAsync(cartId, cancellationToken)
+            ?? throw new KeyNotFoundException("Cart not found");
+
+        return cart.Items.Sum(x => x.Quantity);
     }
 
-    /// <inheritdoc />
-    public Task<decimal> GetTotalAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(_items.Values.Sum(i => i.LineTotal));
-
-    /// <inheritdoc />
-    public int GetItemCount() => _items.Values.Sum(i => i.Quantity);
+    private static CartDto MapToDto(Cart cart)
+    {
+        return new CartDto
+        {
+            Id = cart.Id,
+            Items = cart.Items.Select(item => new CartItemDto
+            {
+                ProductId = item.ProductId,
+                ProductName = item.Product?.Name ?? string.Empty,
+                Price = item.UnitPrice > 0 ? item.UnitPrice : item.Product?.Price ?? 0,
+                Quantity = item.Quantity,
+            }).ToList(),
+        };
+    }
 }

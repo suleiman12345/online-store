@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
 using OnlineStore.Application.Interfaces.Services;
 
 namespace OnlineStore.Api.Controllers;
 
 /// <summary>
-/// REST API for product management.
+/// Контроллер товаров.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -13,105 +13,68 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
 
-    /// <summary>
-    /// Initializes a new instance of <see cref="ProductsController"/>.
-    /// </summary>
     public ProductsController(IProductService productService)
     {
         _productService = productService;
     }
 
     /// <summary>
-    /// Gets all products.
+    /// Получить все товары.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<ProductDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll(
+        [FromQuery] Guid? categoryId,
+        CancellationToken cancellationToken)
     {
-        var products = await _productService.GetAllAsync(cancellationToken);
-        return Ok(products);
+        var result = categoryId.HasValue
+            ? await _productService.GetByCategoryAsync(categoryId.Value, cancellationToken)
+            : await _productService.GetAllAsync(cancellationToken);
+
+        return Ok(result);
     }
 
     /// <summary>
-    /// Gets a product by identifier.
+    /// Получить товар по Id.
     /// </summary>
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ProductDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var product = await _productService.GetByIdAsync(id, cancellationToken);
-        if (product is null)
-        {
-            return NotFound();
-        }
+        var result = await _productService.GetByIdAsync(id, cancellationToken);
 
-        return Ok(product);
+        if (result == null)
+            return NotFound();
+
+        return Ok(result);
     }
 
     /// <summary>
-    /// Creates a new product.
+    /// Создать товар.
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create(
-        [FromBody] ProductCreateDto dto,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<Guid>> Create(ProductDto dto, CancellationToken cancellationToken)
     {
-        try
-        {
-            var product = await _productService.CreateAsync(dto, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var id = await _productService.CreateAsync(dto, cancellationToken);
+
+        return CreatedAtAction(nameof(GetById), new { id }, id);
     }
 
     /// <summary>
-    /// Updates an existing product.
+    /// Обновить товар.
     /// </summary>
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Update(
-        Guid id,
-        [FromBody] ProductUpdateDto dto,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(Guid id, ProductDto dto, CancellationToken cancellationToken)
     {
-        try
-        {
-            var product = await _productService.UpdateAsync(id, dto, cancellationToken);
-            if (product is null)
-            {
-                return NotFound();
-            }
-
-            return Ok(product);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _productService.UpdateAsync(id, dto, cancellationToken);
+        return NoContent();
     }
 
     /// <summary>
-    /// Deletes a product.
+    /// Удалить товар.
     /// </summary>
     [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await _productService.DeleteAsync(id, cancellationToken);
-        if (!deleted)
-        {
-            return NotFound();
-        }
-
+        await _productService.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
 }

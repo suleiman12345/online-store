@@ -15,16 +15,14 @@ public static class DependencyInjection
     /// Registers application services and validators.
     /// </summary>
     public static IServiceCollection AddApplication(this IServiceCollection services)
-    {
-        services.AddValidatorsFromAssemblyContaining<ProductCreateValidator>();
+{
+    services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
-        services.AddScoped<IProductService, ProductService>();
-        services.AddScoped<ICategoryService, CategoryService>();
-        services.AddScoped<IOrderService, OrderService>();
-        services.AddScoped<IUserService, UserService>();
-        services.AddScoped<ICartService, CartService>();
-        services.AddScoped<IUserSessionService, UserSessionService>();
+    services.AddScoped<IProductService, ProductService>();
+    services.AddScoped<ICategoryService, CategoryService>();
+    services.AddScoped<IOrderService, OrderService>();
+    services.AddScoped<ICartService, CartService>();
 
-        return services;
-    }
+    return services;
+}
 }

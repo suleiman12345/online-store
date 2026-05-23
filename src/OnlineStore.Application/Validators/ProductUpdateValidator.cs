@@ -1,12 +1,12 @@
 using FluentValidation;
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
 
 namespace OnlineStore.Application.Validators;
 
 /// <summary>
-/// Validation rules for <see cref="ProductUpdateDto"/>.
+/// Validation rules for <see cref="ProductDto"/>.
 /// </summary>
-public class ProductUpdateValidator : AbstractValidator<ProductUpdateDto>
+public class ProductUpdateValidator : AbstractValidator<ProductDto>
 {
     /// <summary>
     /// Initializes validation rules for product updates.

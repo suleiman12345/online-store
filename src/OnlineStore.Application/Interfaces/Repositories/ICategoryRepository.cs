@@ -3,10 +3,9 @@ using OnlineStore.Domain.Entities;
 namespace OnlineStore.Application.Interfaces.Repositories;
 
 /// <summary>
-/// Repository contract for <see cref="Category"/> entities.
+/// Репозиторий для работы с категориями товаров.
 /// </summary>
-public interface ICategoryRepository : IGenericRepository<Category>
+public interface ICategoryRepository : IRepository<Category>
 {
-    /// <summary>Gets a category with its products loaded.</summary>
-    Task<Category?> GetByIdWithProductsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

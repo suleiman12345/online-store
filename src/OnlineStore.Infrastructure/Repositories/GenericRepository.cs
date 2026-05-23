@@ -1,60 +1,59 @@
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using OnlineStore.Application.Interfaces.Repositories;
-using OnlineStore.Domain.Common;
 using OnlineStore.Infrastructure.Data;
 
 namespace OnlineStore.Infrastructure.Repositories;
 
 /// <summary>
-/// Generic EF Core repository implementation.
+/// Базовая реализация репозитория на EF Core.
 /// </summary>
-/// <typeparam name="T">Entity type derived from <see cref="BaseEntity"/>.</typeparam>
-public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
+/// <typeparam name="T">Тип доменной сущности.</typeparam>
+public class GenericRepository<T> : IRepository<T> where T : class
 {
-    /// <summary>Database context.</summary>
-    protected readonly AppDbContext Context;
+    protected readonly AppDbContext _context;
+    protected readonly DbSet<T> _dbSet;
 
-    /// <summary>Entity DbSet.</summary>
-    protected readonly DbSet<T> DbSet;
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="GenericRepository{T}"/>.
-    /// </summary>
     public GenericRepository(AppDbContext context)
     {
-        Context = context;
-        DbSet = context.Set<T>();
+        _context = context;
+        _dbSet = context.Set<T>();
     }
 
     /// <inheritdoc />
-    public virtual async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default) =>
-        await DbSet.AsNoTracking().ToListAsync(cancellationToken);
-
-    /// <inheritdoc />
-    public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-        await DbSet.FindAsync([id], cancellationToken);
-
-    /// <inheritdoc />
-    public virtual async Task<IReadOnlyList<T>> FindAsync(
-        Expression<Func<T, bool>> predicate,
-        CancellationToken cancellationToken = default) =>
-        await DbSet.AsNoTracking().Where(predicate).ToListAsync(cancellationToken);
-
-    /// <inheritdoc />
-    public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
+    public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await DbSet.AddAsync(entity, cancellationToken);
-        return entity;
+        return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
     }
 
     /// <inheritdoc />
-    public virtual void Update(T entity) => DbSet.Update(entity);
+    public async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
 
     /// <inheritdoc />
-    public virtual void Remove(T entity) => DbSet.Remove(entity);
+    public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
+    {
+        await _dbSet.AddAsync(entity, cancellationToken);
+    }
 
     /// <inheritdoc />
-    public virtual Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
-        Context.SaveChangesAsync(cancellationToken);
+    public void Update(T entity)
+    {
+        _dbSet.Update(entity);
+    }
+
+    /// <inheritdoc />
+    public void Remove(T entity)
+    {
+        _dbSet.Remove(entity);
+    }
+
+    /// <inheritdoc />
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }

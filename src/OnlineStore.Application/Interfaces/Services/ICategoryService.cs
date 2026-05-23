@@ -1,24 +1,34 @@
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
 
 namespace OnlineStore.Application.Interfaces.Services;
 
 /// <summary>
-/// Application service for category operations.
+/// Сервис работы с категориями.
 /// </summary>
 public interface ICategoryService
 {
-    /// <summary>Gets all categories.</summary>
+    /// <summary>
+    /// Получает все категории.
+    /// </summary>
     Task<IReadOnlyList<CategoryDto>> GetAllAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>Gets a category by identifier.</summary>
+    /// <summary>
+    /// Получает категорию по Id.
+    /// </summary>
     Task<CategoryDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    /// <summary>Creates a new category.</summary>
-    Task<CategoryDto> CreateAsync(CategoryCreateDto dto, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Создаёт новую категорию.
+    /// </summary>
+    Task<Guid> CreateAsync(CategoryDto dto, CancellationToken cancellationToken = default);
 
-    /// <summary>Updates an existing category.</summary>
-    Task<CategoryDto?> UpdateAsync(Guid id, CategoryUpdateDto dto, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Обновляет категорию.
+    /// </summary>
+    Task UpdateAsync(Guid id, CategoryDto dto, CancellationToken cancellationToken = default);
 
-    /// <summary>Deletes a category.</summary>
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Удаляет категорию.
+    /// </summary>
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

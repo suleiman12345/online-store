@@ -1,28 +1,73 @@
 using Microsoft.EntityFrameworkCore;
+using OnlineStore.Contracts;
 using OnlineStore.Domain.Entities;
 
 namespace OnlineStore.Infrastructure.Data;
 
 /// <summary>
-/// Optional database seed data.
+/// Инициализатор базы данных.
+/// Применяет миграции и заполняет начальными данными.
 /// </summary>
 public static class DbInitializer
 {
     /// <summary>
-    /// Seeds default categories when the database is empty.
+    /// Инициализирует базу данных: применяет миграции и seed-данные.
     /// </summary>
-    public static async Task SeedAsync(AppDbContext context, CancellationToken cancellationToken = default)
+    /// <param name="context">Контекст базы данных.</param>
+    public static async Task InitializeAsync(AppDbContext context)
     {
-        if (await context.Categories.AnyAsync(cancellationToken))
+        await context.Database.MigrateAsync();
+
+        if (await context.Categories.AnyAsync())
         {
             return;
         }
 
-        context.Categories.AddRange(
-            new Category { Id = Guid.NewGuid(), Name = "Electronics" },
-            new Category { Id = Guid.NewGuid(), Name = "Clothing" },
-            new Category { Id = Guid.NewGuid(), Name = "Books" });
+        var categories = new List<Category>
+        {
+            new() { Id = Guid.NewGuid(), Name = "Electronics" },
+            new() { Id = Guid.NewGuid(), Name = "Books" },
+            new() { Id = Guid.NewGuid(), Name = "Clothing" },
+            new() { Id = Guid.NewGuid(), Name = "Cars" },
+        };
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.Categories.AddRangeAsync(categories);
+
+        var products = new List<Product>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Laptop",
+                Price = 1200,
+                CategoryId = categories[0].Id,
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Smartphone",
+                Price = 800,
+                CategoryId = categories[0].Id,
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Book - Clean Code",
+                Price = 30,
+                CategoryId = categories[1].Id,
+            },
+        };
+
+        await context.Products.AddRangeAsync(products);
+
+        var cart = new Cart
+        {
+            Id = StoreDefaults.DefaultCartId,
+            Items = [],
+        };
+
+        await context.Carts.AddAsync(cart);
+
+        await context.SaveChangesAsync();
     }
 }

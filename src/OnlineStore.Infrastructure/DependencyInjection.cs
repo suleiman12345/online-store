@@ -13,7 +13,7 @@ namespace OnlineStore.Infrastructure;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers infrastructure services including DbContext and repositories.
+    /// Регистрирует инфраструктуру: DbContext и репозитории.
     /// </summary>
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
@@ -25,11 +25,14 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        // Generic repository
+        services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+
+        // Specific repositories
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
 
         return services;
     }

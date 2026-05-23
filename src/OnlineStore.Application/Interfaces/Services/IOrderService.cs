@@ -1,21 +1,29 @@
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
 
 namespace OnlineStore.Application.Interfaces.Services;
 
 /// <summary>
-/// Order management application service.
+/// Сервис работы с заказами.
 /// </summary>
 public interface IOrderService
 {
-    /// <summary>Creates an order from explicit line items.</summary>
-    Task<OrderDto> CreateAsync(OrderCreateDto dto, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Получает все заказы.
+    /// </summary>
+    Task<IReadOnlyList<OrderDto>> GetAllAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>Gets order history for a customer.</summary>
-    Task<IReadOnlyList<OrderDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
-
-    /// <summary>Gets a single order by identifier.</summary>
+    /// <summary>
+    /// Получает заказ по Id.
+    /// </summary>
     Task<OrderDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    /// <summary>Calculates total amount for line items.</summary>
-    decimal CalculateTotal(IEnumerable<(decimal unitPrice, int quantity)> lines);
+    /// <summary>
+    /// Создаёт заказ из корзины.
+    /// </summary>
+    Task<Guid> CreateFromCartAsync(Guid cartId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Получает заказы по диапазону дат.
+    /// </summary>
+    Task<IReadOnlyList<OrderDto>> GetByDateRangeAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default);
 }

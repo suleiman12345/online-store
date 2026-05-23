@@ -3,37 +3,37 @@ using OnlineStore.Domain.Common;
 namespace OnlineStore.Domain.Entities;
 
 /// <summary>
-/// Single line item within an order.
+/// Элемент заказа.
 /// </summary>
 public class OrderItem : BaseEntity
 {
     /// <summary>
-    /// Foreign key to order.
+    /// Идентификатор заказа.
     /// </summary>
     public Guid OrderId { get; set; }
 
     /// <summary>
-    /// Parent order.
+    /// Заказ.
     /// </summary>
     public Order Order { get; set; } = null!;
 
     /// <summary>
-    /// Foreign key to product.
+    /// Идентификатор товара.
     /// </summary>
     public Guid ProductId { get; set; }
 
     /// <summary>
-    /// Ordered product.
+    /// Товар.
     /// </summary>
     public Product Product { get; set; } = null!;
 
     /// <summary>
-    /// Quantity ordered.
+    /// Количество.
     /// </summary>
     public int Quantity { get; set; }
 
     /// <summary>
-    /// Price at the time of order.
+    /// Цена на момент покупки.
     /// </summary>
     public decimal Price { get; set; }
 }

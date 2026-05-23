@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using OnlineStore.Application.Interfaces.Repositories;
 using OnlineStore.Domain.Entities;
 using OnlineStore.Infrastructure.Data;
@@ -6,21 +5,16 @@ using OnlineStore.Infrastructure.Data;
 namespace OnlineStore.Infrastructure.Repositories;
 
 /// <summary>
-/// EF Core repository for <see cref="Category"/> entities.
+/// EF Core реализация репозитория категорий.
 /// </summary>
-public class CategoryRepository : GenericRepository<Category>, ICategoryRepository
+/// <remarks>
+/// Инициализирует репозиторий категорий.
+/// </remarks>
+/// <param name="context">Контекст базы данных.</param>
+public class CategoryRepository(AppDbContext context) : GenericRepository<Category>(context), ICategoryRepository
 {
-    /// <summary>
-    /// Initializes a new instance of <see cref="CategoryRepository"/>.
-    /// </summary>
-    public CategoryRepository(AppDbContext context)
-        : base(context)
+    public Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
+        throw new NotImplementedException();
     }
-
-    /// <inheritdoc />
-    public async Task<Category?> GetByIdWithProductsAsync(Guid id, CancellationToken cancellationToken = default) =>
-        await DbSet
-            .Include(c => c.Products)
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 }

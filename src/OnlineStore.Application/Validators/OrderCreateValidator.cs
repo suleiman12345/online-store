@@ -1,22 +1,18 @@
 using FluentValidation;
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
 
 namespace OnlineStore.Application.Validators;
 
 /// <summary>
-/// Validation rules for <see cref="OrderCreateDto"/>.
+/// Validation rules for <see cref="OrderDto"/>.
 /// </summary>
-public class OrderCreateValidator : AbstractValidator<OrderCreateDto>
+public class OrderCreateValidator : AbstractValidator<OrderDto>
 {
     /// <summary>
     /// Initializes validation rules for order creation.
     /// </summary>
     public OrderCreateValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEmpty()
-            .WithMessage("UserId is required.");
-
         RuleFor(x => x.Items)
             .NotEmpty()
             .WithMessage("Order must contain at least one item.");

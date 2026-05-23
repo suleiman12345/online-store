@@ -1,44 +1,14 @@
-﻿@inherits LayoutComponentBase
-@implements IDisposable
-@inject ICartService CartService
-@inject NavigationManager Navigation
+@inherits LayoutComponentBase
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu ItemCount="@_cartCount" />
+    <div class="sidebar p-3">
+        <h4 class="text-white mb-4">Online Store</h4>
+        <NavMenu />
     </div>
 
     <main>
-        <article class="content px-4 py-3">
+        <div class="container py-4">
             @Body
-        </article>
+        </div>
     </main>
 </div>
-
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
-
-@code {
-    private int _cartCount;
-
-    /// <inheritdoc />
-    protected override void OnInitialized()
-    {
-        Navigation.LocationChanged += OnLocationChanged;
-        RefreshCartCount();
-    }
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        RefreshCartCount();
-        _ = InvokeAsync(StateHasChanged);
-    }
-
-    private void RefreshCartCount() => _cartCount = CartService.GetItemCount();
-
-    /// <inheritdoc />
-    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
-}

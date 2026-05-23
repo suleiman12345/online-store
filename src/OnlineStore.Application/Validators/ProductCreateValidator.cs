@@ -1,12 +1,12 @@
 using FluentValidation;
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
 
 namespace OnlineStore.Application.Validators;
 
 /// <summary>
 /// Validation rules for <see cref="ProductCreateDto"/>.
 /// </summary>
-public class ProductCreateValidator : AbstractValidator<ProductCreateDto>
+public class ProductCreateValidator : AbstractValidator<ProductDto>
 {
     /// <summary>
     /// Initializes validation rules for product creation.

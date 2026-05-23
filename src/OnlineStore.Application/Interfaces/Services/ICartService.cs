@@ -1,35 +1,34 @@
-using OnlineStore.Application.DTOs;
+using OnlineStore.Contracts.DTOs;
 
 namespace OnlineStore.Application.Interfaces.Services;
 
 /// <summary>
-/// Shopping cart operations (in-memory, not persisted to database).
+/// Сервис работы с корзиной.
 /// </summary>
 public interface ICartService
 {
-    /// <summary>Gets all items currently in the cart.</summary>
-    Task<IReadOnlyList<CartItemDto>> GetItemsAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Получает корзину пользователя.
+    /// </summary>
+    Task<CartDto?> GetAsync(Guid cartId, CancellationToken cancellationToken = default);
 
-    /// <summary>Adds or updates a product quantity in the cart.</summary>
-    Task AddItemAsync(
-        Guid productId,
-        string productName,
-        decimal unitPrice,
-        int quantity,
-        CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Добавляет товар в корзину.
+    /// </summary>
+    Task AddItemAsync(Guid cartId, Guid productId, int quantity, CancellationToken cancellationToken = default);
 
-    /// <summary>Updates quantity for an existing cart line.</summary>
-    Task UpdateQuantityAsync(Guid productId, int quantity, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Удаляет товар из корзины.
+    /// </summary>
+    Task RemoveItemAsync(Guid cartId, Guid productId, CancellationToken cancellationToken = default);
 
-    /// <summary>Removes a product from the cart.</summary>
-    Task RemoveItemAsync(Guid productId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Очищает корзину.
+    /// </summary>
+    Task ClearAsync(Guid cartId, CancellationToken cancellationToken = default);
 
-    /// <summary>Clears the cart.</summary>
-    Task ClearAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>Calculates cart subtotal.</summary>
-    Task<decimal> GetTotalAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>Gets total item count in cart.</summary>
-    int GetItemCount();
+     /// <summary>
+    /// Количество товаров в корзине (сумма Quantity).
+    /// </summary>
+    Task<int> GetItemCountAsync(Guid cartId, CancellationToken cancellationToken = default);
 }

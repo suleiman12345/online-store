@@ -1,73 +1,119 @@
-@page "/products/{Id:guid}"
-@inject IStoreApiClient Api
-@inject ICartService CartService
-@inject NavigationManager Navigation
+@page "/products/{ProductId:guid}"
 
-<PageTitle>Product Details</PageTitle>
+<PageTitle>@(_product?.Name ?? "Product")</PageTitle>
 
-@if (_loading)
-{
-    <p>Loading...</p>
-}
-else if (_product is null)
-{
-    <p class="text-danger">Product not found.</p>
-}
-else
-{
-    <h1>@_product.Name</h1>
-    <p class="text-muted">@_product.CategoryName</p>
-    <p>@_product.Description</p>
-    <p><strong>Price:</strong> @_product.Price.ToString("C")</p>
-    <p><strong>Stock:</strong> @_product.StockQuantity</p>
+<div class="page-block">
+    <a class="back-link" href="/products">← Products</a>
 
-    @if (_product.Tags.Count > 0)
+    @if (_loading)
     {
-        <p>
-            <strong>Tags:</strong>
-            @foreach (var tag in _product.Tags)
-            {
-                <span class="badge bg-secondary me-1">@tag</span>
-            }
-        </p>
+        <p class="muted">Loading...</p>
     }
+    else if (!string.IsNullOrEmpty(_error))
+    {
+        <p class="error-text">@_error</p>
+    }
+    else if (_product is null)
+    {
+        <p class="muted">Product not found.</p>
+    }
+    else
+    {
+        <h1 class="page-title">@_product.Name</h1>
+        <p class="muted">@_product.CategoryName</p>
 
-    <div class="d-flex gap-2 align-items-center">
-        <label class="form-label mb-0" for="qty">Quantity</label>
-        <input id="qty" type="number" class="form-control w-auto" min="1" max="@_product.StockQuantity" @bind="_quantity" />
-        <button class="btn btn-primary"
-                disabled="@(_product.StockQuantity == 0)"
-                @onclick="AddToCart">
-            Add to cart
+        <dl class="detail-list">
+            <dt>Price</dt>
+            <dd>@_product.Price.ToString("C")</dd>
+            <dt>Category</dt>
+            <dd>@_product.CategoryName</dd>
+            <dt>Stock</dt>
+            <dd>@_product.StockQuantity</dd>
+        </dl>
+
+        <button class="btn-primary"
+                disabled="@_busy"
+                @onclick="AddToCartAsync">
+            @(_busy ? "Adding..." : "Add to cart")
         </button>
-        <a class="btn btn-outline-secondary" href="/products">Back to catalog</a>
-    </div>
-}
+
+        @if (!string.IsNullOrEmpty(_message))
+        {
+            <p class="success-text">@_message</p>
+        }
+    }
+</div>
 
 @code {
-    /// <summary>Product identifier from route.</summary>
     [Parameter]
-    public Guid Id { get; set; }
+    public Guid ProductId { get; set; }
+
+    [Inject]
+    private IProductApiService ProductApi { get; set; } = default!;
+
+    [Inject]
+    private ICartApiService CartApi { get; set; } = default!;
+
+    [Inject]
+    private ICartIdService CartIdService { get; set; } = default!;
 
     private ProductDto? _product;
     private bool _loading = true;
-    private int _quantity = 1;
+    private bool _busy;
+    private string? _error;
+    private string? _message;
 
-    /// <inheritdoc />
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        _product = await Api.GetProductAsync(Id);
-        _loading = false;
+        await LoadProductAsync();
     }
 
-    private async Task AddToCart()
+    private async Task LoadProductAsync()
+    {
+        _loading = true;
+        _error = null;
+        _message = null;
+
+        try
+        {
+            _product = await ProductApi.GetByIdAsync(ProductId);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load product: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task AddToCartAsync()
     {
         if (_product is null)
         {
             return;
         }
 
-        await CartService.AddItemAsync(_product.Id, _product.Name, _product.Price, _quantity);
-        Navigation.NavigateTo("/cart");
+        _busy = true;
+        _error = null;
+        _message = null;
+
+        try
+        {
+            await CartIdService.EnsureInitializedAsync();
+            var cartId = await CartIdService.GetCartIdAsync();
+            var cart = await CartApi.AddItemAsync(cartId, _product.Id);
+            var count = cart?.Items.Sum(x => x.Quantity) ?? 0;
+            _message = $"Added to cart ({count} item(s)).";
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to add to cart: {ex.Message}";
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 }

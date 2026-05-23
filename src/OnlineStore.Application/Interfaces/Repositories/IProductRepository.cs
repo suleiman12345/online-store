@@ -3,13 +3,12 @@ using OnlineStore.Domain.Entities;
 namespace OnlineStore.Application.Interfaces.Repositories;
 
 /// <summary>
-/// Repository contract for <see cref="Product"/> entities.
+/// Репозиторий для работы с товарами.
 /// </summary>
-public interface IProductRepository : IGenericRepository<Product>
+public interface IProductRepository : IRepository<Product>
 {
-    /// <summary>Gets a product with its category loaded.</summary>
-    Task<Product?> GetByIdWithCategoryAsync(Guid id, CancellationToken cancellationToken = default);
-
-    /// <summary>Gets all products with categories loaded.</summary>
-    Task<IReadOnlyList<Product>> GetAllWithCategoryAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Получает список товаров по идентификатору категории.
+    /// </summary>
+    Task<IReadOnlyList<Product>> GetByCategoryIdAsync(Guid categoryId, CancellationToken cancellationToken = default);
 }
