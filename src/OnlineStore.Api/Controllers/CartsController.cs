@@ -1,8 +1,12 @@
+// <copyright file="CartsController.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
+namespace OnlineStore.Api.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
 using OnlineStore.Application.Interfaces.Services;
 using OnlineStore.Contracts.DTOs;
-
-namespace OnlineStore.Api.Controllers;
 
 /// <summary>
 /// Контроллер корзины.
@@ -15,7 +19,17 @@ public class CartController : ControllerBase
 
     public CartController(ICartService cartService)
     {
-        _cartService = cartService;
+        this._cartService = cartService;
+    }
+
+    /// <summary>
+    /// Создать корзину.
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<Guid>> Create(CancellationToken cancellationToken)
+    {
+        var cartId = await this._cartService.CreateAsync(cancellationToken);
+        return this.CreatedAtAction(nameof(this.Get), new { cartId }, cartId);
     }
 
     /// <summary>
@@ -26,12 +40,12 @@ public class CartController : ControllerBase
         Guid cartId,
         CancellationToken cancellationToken)
     {
-        var cart = await _cartService.GetAsync(cartId, cancellationToken);
+        var cart = await this._cartService.GetAsync(cartId, cancellationToken);
 
         if (cart is null)
-            return NotFound();
+            return this.NotFound();
 
-        return Ok(cart);
+        return this.Ok(cart);
     }
 
     /// <summary>
@@ -44,8 +58,8 @@ public class CartController : ControllerBase
         [FromQuery] int quantity,
         CancellationToken cancellationToken)
     {
-        await _cartService.AddItemAsync(cartId, productId, quantity, cancellationToken);
-        return NoContent();
+        await this._cartService.AddItemAsync(cartId, productId, quantity, cancellationToken);
+        return this.NoContent();
     }
 
     /// <summary>
@@ -57,8 +71,8 @@ public class CartController : ControllerBase
         Guid productId,
         CancellationToken cancellationToken)
     {
-        await _cartService.RemoveItemAsync(cartId, productId, cancellationToken);
-        return NoContent();
+        await this._cartService.RemoveItemAsync(cartId, productId, cancellationToken);
+        return this.NoContent();
     }
 
     /// <summary>
@@ -69,7 +83,7 @@ public class CartController : ControllerBase
         Guid cartId,
         CancellationToken cancellationToken)
     {
-        await _cartService.ClearAsync(cartId, cancellationToken);
-        return NoContent();
+        await this._cartService.ClearAsync(cartId, cancellationToken);
+        return this.NoContent();
     }
 }

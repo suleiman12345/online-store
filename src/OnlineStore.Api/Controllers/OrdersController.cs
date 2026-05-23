@@ -1,8 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-using OnlineStore.Contracts.DTOs;
-using OnlineStore.Application.Interfaces.Services;
+// <copyright file="OrdersController.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Api.Controllers;
+
+using Microsoft.AspNetCore.Mvc;
+using OnlineStore.Application.Interfaces.Services;
+using OnlineStore.Contracts.DTOs;
 
 /// <summary>
 /// Контроллер заказов.
@@ -15,7 +19,7 @@ public class OrdersController : ControllerBase
 
     public OrdersController(IOrderService orderService)
     {
-        _orderService = orderService;
+        this._orderService = orderService;
     }
 
     /// <summary>
@@ -25,8 +29,8 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<OrderDto>>> GetAll(
         CancellationToken cancellationToken)
     {
-        var result = await _orderService.GetAllAsync(cancellationToken);
-        return Ok(result);
+        var result = await this._orderService.GetAllAsync(cancellationToken);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -37,12 +41,12 @@ public class OrdersController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await _orderService.GetByIdAsync(id, cancellationToken);
+        var result = await this._orderService.GetByIdAsync(id, cancellationToken);
 
         if (result is null)
-            return NotFound();
+            return this.NotFound();
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -53,10 +57,10 @@ public class OrdersController : ControllerBase
         Guid cartId,
         CancellationToken cancellationToken)
     {
-        var orderId = await _orderService.CreateFromCartAsync(cartId, cancellationToken);
+        var orderId = await this._orderService.CreateFromCartAsync(cartId, cancellationToken);
 
-        return CreatedAtAction(
-            nameof(GetById),
+        return this.CreatedAtAction(
+            nameof(this.GetById),
             new { id = orderId },
             orderId);
     }
@@ -70,7 +74,7 @@ public class OrdersController : ControllerBase
         [FromQuery] DateTime to,
         CancellationToken cancellationToken)
     {
-        var result = await _orderService.GetByDateRangeAsync(from, to, cancellationToken);
-        return Ok(result);
+        var result = await this._orderService.GetByDateRangeAsync(from, to, cancellationToken);
+        return this.Ok(result);
     }
 }

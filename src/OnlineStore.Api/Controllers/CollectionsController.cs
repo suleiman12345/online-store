@@ -1,8 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-using OnlineStore.Contracts.DTOs;
-using OnlineStore.Application.Interfaces.Services;
+// <copyright file="CollectionsController.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Api.Controllers;
+
+using Microsoft.AspNetCore.Mvc;
+using OnlineStore.Application.Interfaces.Services;
+using OnlineStore.Contracts.DTOs;
 
 /// <summary>
 /// Контроллер коллекций (категорий товаров).
@@ -15,7 +19,7 @@ public class CollectionsController : ControllerBase
 
     public CollectionsController(ICategoryService categoryService)
     {
-        _categoryService = categoryService;
+        this._categoryService = categoryService;
     }
 
     /// <summary>
@@ -25,8 +29,8 @@ public class CollectionsController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<CategoryDto>>> GetAll(
         CancellationToken cancellationToken)
     {
-        var result = await _categoryService.GetAllAsync(cancellationToken);
-        return Ok(result);
+        var result = await this._categoryService.GetAllAsync(cancellationToken);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -37,12 +41,12 @@ public class CollectionsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await _categoryService.GetByIdAsync(id, cancellationToken);
+        var result = await this._categoryService.GetByIdAsync(id, cancellationToken);
 
         if (result is null)
-            return NotFound();
+            return this.NotFound();
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -53,10 +57,10 @@ public class CollectionsController : ControllerBase
         [FromBody] CategoryDto dto,
         CancellationToken cancellationToken)
     {
-        var id = await _categoryService.CreateAsync(dto, cancellationToken);
+        var id = await this._categoryService.CreateAsync(dto, cancellationToken);
 
-        return CreatedAtAction(
-            nameof(GetById),
+        return this.CreatedAtAction(
+            nameof(this.GetById),
             new { id },
             id);
     }
@@ -70,8 +74,8 @@ public class CollectionsController : ControllerBase
         [FromBody] CategoryDto dto,
         CancellationToken cancellationToken)
     {
-        await _categoryService.UpdateAsync(id, dto, cancellationToken);
-        return NoContent();
+        await this._categoryService.UpdateAsync(id, dto, cancellationToken);
+        return this.NoContent();
     }
 
     /// <summary>
@@ -82,7 +86,7 @@ public class CollectionsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        await _categoryService.DeleteAsync(id, cancellationToken);
-        return NoContent();
+        await this._categoryService.DeleteAsync(id, cancellationToken);
+        return this.NoContent();
     }
 }

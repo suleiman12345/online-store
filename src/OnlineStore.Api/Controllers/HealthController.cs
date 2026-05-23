@@ -1,6 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
+// <copyright file="HealthController.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Api.Controllers;
+
+using Microsoft.AspNetCore.Mvc;
 
 /// <summary>
 /// Health check endpoint for container orchestration.
@@ -14,5 +18,5 @@ public class HealthController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult Get() => Ok(new { status = "healthy" });
+    public IActionResult Get() => this.Ok(new { status = "healthy" });
 }

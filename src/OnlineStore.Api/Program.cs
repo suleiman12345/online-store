@@ -1,3 +1,7 @@
+// <copyright file="Program.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
+
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using OnlineStore.Infrastructure;

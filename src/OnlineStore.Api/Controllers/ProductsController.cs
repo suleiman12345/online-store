@@ -1,8 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-using OnlineStore.Contracts.DTOs;
-using OnlineStore.Application.Interfaces.Services;
+// <copyright file="ProductsController.cs" company="OnlineStore">
+// Copyright (c) OnlineStore. All rights reserved.
+// </copyright>
 
 namespace OnlineStore.Api.Controllers;
+
+using Microsoft.AspNetCore.Mvc;
+using OnlineStore.Application.Interfaces.Services;
+using OnlineStore.Contracts.DTOs;
 
 /// <summary>
 /// Контроллер товаров.
@@ -15,7 +19,7 @@ public class ProductsController : ControllerBase
 
     public ProductsController(IProductService productService)
     {
-        _productService = productService;
+        this._productService = productService;
     }
 
     /// <summary>
@@ -27,10 +31,10 @@ public class ProductsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = categoryId.HasValue
-            ? await _productService.GetByCategoryAsync(categoryId.Value, cancellationToken)
-            : await _productService.GetAllAsync(cancellationToken);
+            ? await this._productService.GetByCategoryAsync(categoryId.Value, cancellationToken)
+            : await this._productService.GetAllAsync(cancellationToken);
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -39,12 +43,12 @@ public class ProductsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ProductDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var result = await _productService.GetByIdAsync(id, cancellationToken);
+        var result = await this._productService.GetByIdAsync(id, cancellationToken);
 
         if (result == null)
-            return NotFound();
+            return this.NotFound();
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     /// <summary>
@@ -53,9 +57,9 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> Create(ProductCreateDto dto, CancellationToken cancellationToken)
     {
-        var id = await _productService.CreateAsync(dto, cancellationToken);
+        var id = await this._productService.CreateAsync(dto, cancellationToken);
 
-        return CreatedAtAction(nameof(GetById), new { id }, id);
+        return this.CreatedAtAction(nameof(this.GetById), new { id }, id);
     }
 
     /// <summary>
@@ -64,8 +68,8 @@ public class ProductsController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, ProductDto dto, CancellationToken cancellationToken)
     {
-        await _productService.UpdateAsync(id, dto, cancellationToken);
-        return NoContent();
+        await this._productService.UpdateAsync(id, dto, cancellationToken);
+        return this.NoContent();
     }
 
     /// <summary>
@@ -74,7 +78,7 @@ public class ProductsController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        await _productService.DeleteAsync(id, cancellationToken);
-        return NoContent();
+        await this._productService.DeleteAsync(id, cancellationToken);
+        return this.NoContent();
     }
 }
